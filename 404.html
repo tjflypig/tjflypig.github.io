@@ -295,16 +295,16 @@
 </div>
   <div class="links-of-author motion-element">
       <span class="links-of-author-item">
-        <a href="https://github.com/tjflypig" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tjflypig" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+        <a href="https://github.com/tjflypig" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tjflypig" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
       </span>
       <span class="links-of-author-item">
-        <a href="mailto:tjzsf90@163.com" title="E-Mail → mailto:tjzsf90@163.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+        <a href="mailto:tjzsf90@163.com" title="E-Mail → mailto:tjzsf90@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
       </span>
       <span class="links-of-author-item">
-        <a href="http://www.zhihu.com/people/zhu-sheng-fa" title="知乎 → http:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;zhu-sheng-fa" rel="noopener" target="_blank"><i class="diamond fa-fw"></i>知乎</a>
+        <a href="http://www.zhihu.com/people/zhu-sheng-fa" title="知乎 → http:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;zhu-sheng-fa" rel="noopener" target="_blank"><i class="fab diamond fa-fw"></i>知乎</a>
       </span>
       <span class="links-of-author-item">
-        <a href="http://weibo.com/1831937800/profile?topnav=1&wvr=6" title="微博 → http:&#x2F;&#x2F;weibo.com&#x2F;1831937800&#x2F;profile?topnav&#x3D;1&amp;wvr&#x3D;6" rel="noopener" target="_blank"><i class="weibo fa-fw"></i>微博</a>
+        <a href="http://weibo.com/1831937800/profile?topnav=1&wvr=6" title="微博 → http:&#x2F;&#x2F;weibo.com&#x2F;1831937800&#x2F;profile?topnav&#x3D;1&amp;wvr&#x3D;6" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>微博</a>
       </span>
   </div>
 
@@ -368,9 +368,14 @@
                 console.error('Failed to save visitor count', error);
               });
           } else {
-              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
-              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
-            
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
           }
         })
         .catch(error => {
@@ -397,7 +402,7 @@
         });
     }
 
-    let { app_id, app_key, server_url } = {"enable":true,"app_id":"icgmp5aN0qPXXuShat527iJO-gzGzoHsz","app_key":"L3677JgSxJ0yb86A71k25kcw","server_url":null,"security":true};
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"icgmp5aN0qPXXuShat527iJO-gzGzoHsz","app_key":"L3677JgSxJ0yb86A71k25kcw","server_url":null,"security":false};
     function fetchData(api_server) {
       var Counter = (method, url, data) => {
         return fetch(`${api_server}/1.1${url}`, {
