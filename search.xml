@@ -91,23 +91,6 @@
       </tags>
   </entry>
   <entry>
-    <title>C++通过ADO连接ORACLE数据库</title>
-    <url>/2016/08/26/coracle/</url>
-    <content><![CDATA[<h1 id="连接的基本方法"><a href="#连接的基本方法" class="headerlink" title="连接的基本方法"></a>连接的基本方法</h1><p><strong>首先确认开发环境以及oracle的位数要统一才能连接。</strong><br>自己花了半天没成功的原因就在于，电脑是64位系统，oracle装的时64位的，然而在写C++程序的时候选择了X86的方式编译，导致编译过但程序报错无法连接。重新装32位oracle之后问题解决。</p>
- <a id="more"></a>
-
-<h2 id="基本的连接程序如下，需要智能指针"><a href="#基本的连接程序如下，需要智能指针" class="headerlink" title="基本的连接程序如下，需要智能指针"></a>基本的连接程序如下，需要智能指针</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;conn.h</span><br><span class="line">&#x2F;注意标识no_namepace,否则需要添加 using namespace ADODB</span><br><span class="line">&#x2F;&#x2F;这里引用微软的ADO数据连接dll</span><br><span class="line">#import &quot;C:\Program Files\Common Files\System\ado\msado15.dll&quot; no_namespace rename(&quot;EOF&quot;,&quot;adoEOF&quot;)</span><br><span class="line">#include &lt;cstring&gt;</span><br><span class="line">#include &lt;atlstr.h&gt;</span><br><span class="line"> </span><br><span class="line">_ConnectionPtr m_conn;</span><br><span class="line">_RecordsetPtr m_rec;</span><br><span class="line">HRESULT hr;</span><br><span class="line"> </span><br><span class="line">bool AdoOpen(_bstr_t);</span><br><span class="line">_RecordsetPtr AdoExecute(CString);</span><br><span class="line">void GetRecordSet(CString);</span><br><span class="line">bool AdoClose();</span><br><span class="line">void AdoQuery(CString);</span><br><span class="line">bool AdoAdd();</span><br><span class="line">bool AdoUpdate();</span><br><span class="line">bool AdoDelete();</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;conn.cpp</span><br><span class="line">#include &quot;conn.h&quot;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">void main()</span><br><span class="line">&#123;</span><br><span class="line">    _bstr_t ConStr &#x3D; &quot;Provider &#x3D; OraOLEDB.Oracle;Data Source &#x3D; orcl;User id&#x3D;scott;Password &#x3D; root;&quot;;</span><br><span class="line">    AdoOpen(ConStr);</span><br><span class="line">    CString SQLCommend &#x3D; &quot;SELECT * FROM DEPT;&quot;;</span><br><span class="line">    AdoQuery(SQLCommend);</span><br><span class="line">    cout&lt;&lt;&quot;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&quot;&lt;&lt;endl;</span><br><span class="line">    AdoAdd();</span><br><span class="line">    AdoQuery(SQLCommend);</span><br><span class="line">    AdoClose();</span><br><span class="line">    int a;</span><br><span class="line">    cin&gt;&gt;a;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">bool AdoOpen(_bstr_t ConStr)</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F;初始化COM</span><br><span class="line">    hr &#x3D; CoInitialize(NULL);</span><br><span class="line">    hr &#x3D; m_conn.CreateInstance(&quot;ADODB.Connection&quot;);</span><br><span class="line">    &#x2F;&#x2F;hr &#x3D; m_conn.CreateInstance(__uuidof(Connection));</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        hr &#x3D; m_conn-&gt;Open(ConStr,&quot;&quot;,&quot;&quot;,NULL);</span><br><span class="line">        cout&lt;&lt;&quot;链接成功！&quot; &lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage();</span><br><span class="line">    &#125;</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void GetRecordSet(CString SQL)</span><br><span class="line">&#123;</span><br><span class="line">    try&#123;</span><br><span class="line">        m_rec.CreateInstance(__uuidof(Recordset));</span><br><span class="line">        m_rec-&gt;Open(_bstr_t(SQL),m_conn.GetInterfacePtr(),adOpenDynamic,adLockOptimistic,adCmdText);</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"> &#x2F;&#x2F;此示例中未用此方法，但是一般的语句可以通过这个函数执行</span><br><span class="line">_RecordsetPtr AdoExecute(CString sqlStr)</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        if(m_conn&#x3D;NULL)</span><br><span class="line">        &#123;</span><br><span class="line">            cout&lt;&lt;&quot;请先链接数据库!&quot;;</span><br><span class="line">            return NULL;</span><br><span class="line">        &#125;</span><br><span class="line">    _variant_t RecordAff;</span><br><span class="line">    _RecordsetPtr PRecord;</span><br><span class="line">    PRecord &#x3D; m_conn-&gt;Execute(_bstr_t(sqlStr),&amp;RecordAff,adCmdText);</span><br><span class="line">    return PRecord;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void AdoQuery(CString SQL)</span><br><span class="line">&#123;</span><br><span class="line">    GetRecordSet(SQL);</span><br><span class="line">    &#x2F;&#x2F;查询方法1</span><br><span class="line">    variant_t no,name,loc;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        m_rec-&gt;MoveFirst();</span><br><span class="line">        while(m_rec-&gt;adoEOF&#x3D;&#x3D;VARIANT_FALSE)</span><br><span class="line">        &#123;</span><br><span class="line">            no &#x3D; m_rec-&gt;GetCollect(&quot;DEPTNO&quot;);</span><br><span class="line">            name &#x3D; m_rec-&gt;GetCollect(&quot;DNAME&quot;);</span><br><span class="line">            loc &#x3D;m_rec-&gt;GetCollect(&quot;LOC&quot;);</span><br><span class="line">            std::cout&lt;&lt;&quot;DeptNO:&quot;&lt;&lt;(LPCTSTR)_bstr_t(no)&lt;&lt;std::endl;</span><br><span class="line">            std::cout&lt;&lt;&quot;Name:&quot;&lt;&lt;(LPCTSTR)_bstr_t(name)&lt;&lt;std::endl;</span><br><span class="line">            std::cout&lt;&lt;&quot;Loc:&quot;&lt;&lt;(LPCTSTR)_bstr_t(loc)&lt;&lt;std::endl;</span><br><span class="line">            m_rec-&gt;MoveNext();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F;查询方法2</span><br><span class="line">    &#x2F;*try</span><br><span class="line">    &#123;</span><br><span class="line">        m_rec-&gt;MoveFirst();</span><br><span class="line">        while (m_rec-&gt;adoEOF&#x3D;&#x3D;VARIANT_FALSE)</span><br><span class="line">        &#123;</span><br><span class="line">            cout&lt;&lt;(char*)(_bstr_t)(m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;DEPTNO&quot;))-&gt;Value)&lt;&lt;&quot; &quot;;</span><br><span class="line">            cout&lt;&lt;(char*)(_bstr_t)(m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;DNAME&quot;))-&gt;Value)&lt;&lt;&quot; &quot;;</span><br><span class="line">            cout&lt;&lt;(char*)(_bstr_t)(m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;LOC&quot;))-&gt;Value)&lt;&lt;&quot; &quot;;</span><br><span class="line">            cout&lt;&lt;endl;</span><br><span class="line">            m_rec-&gt;MoveNext();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;*&#x2F;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">bool AdoAdd()</span><br><span class="line">&#123;</span><br><span class="line">    m_rec-&gt;AddNew();</span><br><span class="line">    &#x2F;&#x2F;插入方法1</span><br><span class="line">    &#x2F;&#x2F;m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;DEPTNO&quot;))-&gt;Value &#x3D;_bstr_t (&quot;50&quot;);</span><br><span class="line">    &#x2F;&#x2F;m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;DNAME&quot;))-&gt;Value &#x3D;_bstr_t (&quot;zsf&quot;);</span><br><span class="line">    &#x2F;&#x2F;m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;LOC&quot;))-&gt;Value &#x3D;_bstr_t (&quot;china&quot;);</span><br><span class="line">    &#x2F;&#x2F;插入方法2</span><br><span class="line">    m_rec-&gt;PutCollect(_variant_t(&quot;DEPTNO&quot;),_variant_t(60));</span><br><span class="line">    m_rec-&gt;PutCollect(_variant_t(&quot;DNAME&quot;),_variant_t(&quot;ZC&quot;));</span><br><span class="line">    m_rec-&gt;PutCollect(_variant_t(&quot;LOC&quot;),_variant_t(&quot;CHINA&quot;));</span><br><span class="line">    m_rec-&gt;Update();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F;未添加</span><br><span class="line">bool AdoDelete()</span><br><span class="line">&#123;</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line">bool AdoClose()</span><br><span class="line">&#123;</span><br><span class="line">    if(m_conn!&#x3D;NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        m_rec-&gt;Close();</span><br><span class="line">        m_rec&#x3D;NULL;</span><br><span class="line">        m_conn-&gt;Close();</span><br><span class="line">        m_conn&#x3D;NULL;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    if(m_conn&#x3D;NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据库传值格式问题"><a href="#数据库传值格式问题" class="headerlink" title="数据库传值格式问题"></a>数据库传值格式问题</h2><p>由于采用的是COM方式打开的数据库，因此基本的数据格式是<code>_bsrt_t``LPCTSTR</code>格式，在传入的时候要转换成这个两个格式。<br>在研究C++这两周真心是发现各种数据格式简直太多了。一时半会有点难以弄懂，慢慢接触，慢慢学习。</p>
-]]></content>
-      <categories>
-        <category>C++, oracle</category>
-      </categories>
-      <tags>
-        <tag>studying</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>设计模式初探-VISSIM中简单工厂模式</title>
     <url>/2016/08/31/c-design/</url>
     <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>其实自己的写的是一个非常小的程序，不过根据《大话设计模式》的书中来说，再小的程序也可以体现出设计模式。<br>虽然很早之前就看了设计模式的相关技巧，可能是自己的语言功底不够，在实现上面总是懵懵懂懂，好像知道大体的概念，具体的实现却常常浅尝辄止。这次在完成VISSIM-ORACLE的仿真平台过程中，一个被放在第一节的简单工厂模式就让自己吃了不少苦头，因此，需要进行一定的总结。<br>在完成这篇日志时，C++属于初学阶段，代码有问题或者可优化的地方请大家指出，多谢。</p>
@@ -177,6 +160,23 @@
       <tags>
         <tag>智能网联</tag>
         <tag>车路协同</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>C++通过ADO连接ORACLE数据库</title>
+    <url>/2016/08/26/coracle/</url>
+    <content><![CDATA[<h1 id="连接的基本方法"><a href="#连接的基本方法" class="headerlink" title="连接的基本方法"></a>连接的基本方法</h1><p><strong>首先确认开发环境以及oracle的位数要统一才能连接。</strong><br>自己花了半天没成功的原因就在于，电脑是64位系统，oracle装的时64位的，然而在写C++程序的时候选择了X86的方式编译，导致编译过但程序报错无法连接。重新装32位oracle之后问题解决。</p>
+ <a id="more"></a>
+
+<h2 id="基本的连接程序如下，需要智能指针"><a href="#基本的连接程序如下，需要智能指针" class="headerlink" title="基本的连接程序如下，需要智能指针"></a>基本的连接程序如下，需要智能指针</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;conn.h</span><br><span class="line">&#x2F;注意标识no_namepace,否则需要添加 using namespace ADODB</span><br><span class="line">&#x2F;&#x2F;这里引用微软的ADO数据连接dll</span><br><span class="line">#import &quot;C:\Program Files\Common Files\System\ado\msado15.dll&quot; no_namespace rename(&quot;EOF&quot;,&quot;adoEOF&quot;)</span><br><span class="line">#include &lt;cstring&gt;</span><br><span class="line">#include &lt;atlstr.h&gt;</span><br><span class="line"> </span><br><span class="line">_ConnectionPtr m_conn;</span><br><span class="line">_RecordsetPtr m_rec;</span><br><span class="line">HRESULT hr;</span><br><span class="line"> </span><br><span class="line">bool AdoOpen(_bstr_t);</span><br><span class="line">_RecordsetPtr AdoExecute(CString);</span><br><span class="line">void GetRecordSet(CString);</span><br><span class="line">bool AdoClose();</span><br><span class="line">void AdoQuery(CString);</span><br><span class="line">bool AdoAdd();</span><br><span class="line">bool AdoUpdate();</span><br><span class="line">bool AdoDelete();</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;conn.cpp</span><br><span class="line">#include &quot;conn.h&quot;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">void main()</span><br><span class="line">&#123;</span><br><span class="line">    _bstr_t ConStr &#x3D; &quot;Provider &#x3D; OraOLEDB.Oracle;Data Source &#x3D; orcl;User id&#x3D;scott;Password &#x3D; root;&quot;;</span><br><span class="line">    AdoOpen(ConStr);</span><br><span class="line">    CString SQLCommend &#x3D; &quot;SELECT * FROM DEPT;&quot;;</span><br><span class="line">    AdoQuery(SQLCommend);</span><br><span class="line">    cout&lt;&lt;&quot;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&quot;&lt;&lt;endl;</span><br><span class="line">    AdoAdd();</span><br><span class="line">    AdoQuery(SQLCommend);</span><br><span class="line">    AdoClose();</span><br><span class="line">    int a;</span><br><span class="line">    cin&gt;&gt;a;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">bool AdoOpen(_bstr_t ConStr)</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F;初始化COM</span><br><span class="line">    hr &#x3D; CoInitialize(NULL);</span><br><span class="line">    hr &#x3D; m_conn.CreateInstance(&quot;ADODB.Connection&quot;);</span><br><span class="line">    &#x2F;&#x2F;hr &#x3D; m_conn.CreateInstance(__uuidof(Connection));</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        hr &#x3D; m_conn-&gt;Open(ConStr,&quot;&quot;,&quot;&quot;,NULL);</span><br><span class="line">        cout&lt;&lt;&quot;链接成功！&quot; &lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage();</span><br><span class="line">    &#125;</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void GetRecordSet(CString SQL)</span><br><span class="line">&#123;</span><br><span class="line">    try&#123;</span><br><span class="line">        m_rec.CreateInstance(__uuidof(Recordset));</span><br><span class="line">        m_rec-&gt;Open(_bstr_t(SQL),m_conn.GetInterfacePtr(),adOpenDynamic,adLockOptimistic,adCmdText);</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"> &#x2F;&#x2F;此示例中未用此方法，但是一般的语句可以通过这个函数执行</span><br><span class="line">_RecordsetPtr AdoExecute(CString sqlStr)</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        if(m_conn&#x3D;NULL)</span><br><span class="line">        &#123;</span><br><span class="line">            cout&lt;&lt;&quot;请先链接数据库!&quot;;</span><br><span class="line">            return NULL;</span><br><span class="line">        &#125;</span><br><span class="line">    _variant_t RecordAff;</span><br><span class="line">    _RecordsetPtr PRecord;</span><br><span class="line">    PRecord &#x3D; m_conn-&gt;Execute(_bstr_t(sqlStr),&amp;RecordAff,adCmdText);</span><br><span class="line">    return PRecord;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void AdoQuery(CString SQL)</span><br><span class="line">&#123;</span><br><span class="line">    GetRecordSet(SQL);</span><br><span class="line">    &#x2F;&#x2F;查询方法1</span><br><span class="line">    variant_t no,name,loc;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        m_rec-&gt;MoveFirst();</span><br><span class="line">        while(m_rec-&gt;adoEOF&#x3D;&#x3D;VARIANT_FALSE)</span><br><span class="line">        &#123;</span><br><span class="line">            no &#x3D; m_rec-&gt;GetCollect(&quot;DEPTNO&quot;);</span><br><span class="line">            name &#x3D; m_rec-&gt;GetCollect(&quot;DNAME&quot;);</span><br><span class="line">            loc &#x3D;m_rec-&gt;GetCollect(&quot;LOC&quot;);</span><br><span class="line">            std::cout&lt;&lt;&quot;DeptNO:&quot;&lt;&lt;(LPCTSTR)_bstr_t(no)&lt;&lt;std::endl;</span><br><span class="line">            std::cout&lt;&lt;&quot;Name:&quot;&lt;&lt;(LPCTSTR)_bstr_t(name)&lt;&lt;std::endl;</span><br><span class="line">            std::cout&lt;&lt;&quot;Loc:&quot;&lt;&lt;(LPCTSTR)_bstr_t(loc)&lt;&lt;std::endl;</span><br><span class="line">            m_rec-&gt;MoveNext();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F;查询方法2</span><br><span class="line">    &#x2F;*try</span><br><span class="line">    &#123;</span><br><span class="line">        m_rec-&gt;MoveFirst();</span><br><span class="line">        while (m_rec-&gt;adoEOF&#x3D;&#x3D;VARIANT_FALSE)</span><br><span class="line">        &#123;</span><br><span class="line">            cout&lt;&lt;(char*)(_bstr_t)(m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;DEPTNO&quot;))-&gt;Value)&lt;&lt;&quot; &quot;;</span><br><span class="line">            cout&lt;&lt;(char*)(_bstr_t)(m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;DNAME&quot;))-&gt;Value)&lt;&lt;&quot; &quot;;</span><br><span class="line">            cout&lt;&lt;(char*)(_bstr_t)(m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;LOC&quot;))-&gt;Value)&lt;&lt;&quot; &quot;;</span><br><span class="line">            cout&lt;&lt;endl;</span><br><span class="line">            m_rec-&gt;MoveNext();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;*&#x2F;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">bool AdoAdd()</span><br><span class="line">&#123;</span><br><span class="line">    m_rec-&gt;AddNew();</span><br><span class="line">    &#x2F;&#x2F;插入方法1</span><br><span class="line">    &#x2F;&#x2F;m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;DEPTNO&quot;))-&gt;Value &#x3D;_bstr_t (&quot;50&quot;);</span><br><span class="line">    &#x2F;&#x2F;m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;DNAME&quot;))-&gt;Value &#x3D;_bstr_t (&quot;zsf&quot;);</span><br><span class="line">    &#x2F;&#x2F;m_rec-&gt;Fields-&gt;GetItem(_variant_t(&quot;LOC&quot;))-&gt;Value &#x3D;_bstr_t (&quot;china&quot;);</span><br><span class="line">    &#x2F;&#x2F;插入方法2</span><br><span class="line">    m_rec-&gt;PutCollect(_variant_t(&quot;DEPTNO&quot;),_variant_t(60));</span><br><span class="line">    m_rec-&gt;PutCollect(_variant_t(&quot;DNAME&quot;),_variant_t(&quot;ZC&quot;));</span><br><span class="line">    m_rec-&gt;PutCollect(_variant_t(&quot;LOC&quot;),_variant_t(&quot;CHINA&quot;));</span><br><span class="line">    m_rec-&gt;Update();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F;未添加</span><br><span class="line">bool AdoDelete()</span><br><span class="line">&#123;</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line">bool AdoClose()</span><br><span class="line">&#123;</span><br><span class="line">    if(m_conn!&#x3D;NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        m_rec-&gt;Close();</span><br><span class="line">        m_rec&#x3D;NULL;</span><br><span class="line">        m_conn-&gt;Close();</span><br><span class="line">        m_conn&#x3D;NULL;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    if(m_conn&#x3D;NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据库传值格式问题"><a href="#数据库传值格式问题" class="headerlink" title="数据库传值格式问题"></a>数据库传值格式问题</h2><p>由于采用的是COM方式打开的数据库，因此基本的数据格式是<code>_bsrt_t``LPCTSTR</code>格式，在传入的时候要转换成这个两个格式。<br>在研究C++这两周真心是发现各种数据格式简直太多了。一时半会有点难以弄懂，慢慢接触，慢慢学习。</p>
+]]></content>
+      <categories>
+        <category>C++, oracle</category>
+      </categories>
+      <tags>
+        <tag>studying</tag>
       </tags>
   </entry>
   <entry>
@@ -288,6 +288,81 @@
       </tags>
   </entry>
   <entry>
+    <title>一个疫情笼罩下的春节</title>
+    <url>/2020/04/01/covid2019/</url>
+    <content><![CDATA[<p>一个特殊的春节，在瘟疫的笼罩下，所有的人都人心惶惶，大家每天看着不断增加的数字，仿佛成为了大家的习惯。</p>
+<h1 id="初识"><a href="#初识" class="headerlink" title="初识"></a>初识</h1><p>记得还是元旦之前，出差去上海，老婆突然急急忙忙给我发了消息问我从哪个火车站走的，说是可能有类似于SARS的病又来了，当然很快官方有了声明，未发现人传人的迹象，自然我也信了，毕竟是官方公告。</p>
+<p>接下来得一段时间，就一直出差，基本都没捞着回家，最后一站在连云港，公司开完年会，结束了一年的工作分公司的小伙伴准备一起回家，而那几天风声已经愈发的紧了，记得回武汉的那天早上，去杰瑞宾馆对面的药店买口罩，药店的阿姨还很奇怪为何我买好几包。</p>
+<p>回到武汉，最后两天班，正是钟南山院士宣布病毒会人传人的时候，明显感觉到大家开始慌了，地铁里戴口罩的人明显多了很多。</p>
+<p>接着我们放假了，武汉成为了众矢之的，成了“过街老鼠”，接着就如现在一样武汉“封城”了。</p>
+<a id="more"></a>
+
+<h1 id="封城"><a href="#封城" class="headerlink" title="封城"></a>封城</h1><p>我不喜欢这个词，却又很形象，我却是从来也没想象过，在有生之年居然能遇到电影里的场景，一个千万级人口城市，宣布严控进出，体育场和展览馆变成放舱医院。</p>
+<p>不少外地的好友给我消息，关心状况，希望想办法能帮助到我，说真的，挺感动的。</p>
+<p>好了，在家宅着也变成对社会最大的贡献了。</p>
+<h1 id="生日"><a href="#生日" class="headerlink" title="生日"></a>生日</h1><p>Mia的农历生日是初六，因为疫情没法家庭聚会，就准备紧着家里的几口人给她过生日，其他家人视频连线。</p>
+<p>作为女儿的周岁生日，自然是打算好好给她布置一番，好在是提前买了气球，大年二十九，想着给先布置起来，也给家里增加一点喜气，结果晚上十一点对，一辆救护车的闪光映入眼帘，因为在一楼看的很清楚，后面就听说楼上的一户家里确诊了，当时看到全副武装的医护人员在自家楼栋拖走人的时候，还是心里咯噔了一下，老婆也吓坏了，我们一起把大门口消毒，给她平复了一下心情。</p>
+<p>初六，给宝宝做了蛋糕，做了视频，办了抓周仪式；二月十号，宝宝公历生日，原本以为我们可以在海底捞举办一个生日party，也只能是原班人马，剧情再来一遍。</p>
+<h1 id="战“疫”"><a href="#战“疫”" class="headerlink" title="战“疫”"></a>战“疫”</h1><p>今年过年由于小孩比较小，放弃了回汉南那边，让爸妈过来了，爸年三十才放假，拖了大包小包的菜水果种种过来。</p>
+<p>结果疫情的发展，有点猝不及防，关键是又赶上了中国特色的世界级的人口迁移活动——“春运”，控制的难度可想而知。</p>
+<p>父亲是个老党员，很快就被召集回单位，去支援社区的工作，大年初二，在武汉升级交通管制的头一天，急急忙忙被召唤回去，参与到战“疫”的第一线。很担心，但是我知道这是他必须做的。而我每天负责了解同事们的身体状态，也为内部防控做自己的努力。</p>
+<h1 id="物资"><a href="#物资" class="headerlink" title="物资"></a>物资</h1><p>“封城”之后，各大超市的物资几乎都被洗劫一空，好在是爸大年三十过来带来了大量的物资，足以让我们应对了半个月多，然而这只是我们，也只是温饱问题。</p>
+<p>医疗物资一直是紧缺的，从红十字会的事情，到各大医院纷纷求助，都暴露出医疗物资的极度匮乏，好在是在连云港买了点口罩，回来发现根本买不到。双黄连的乌龙也是增大了交叉感染的机会，恐慌之下，没有多少人是真正能判断是非的，不过谁叫这个新闻是从官媒出来的呢。</p>
+<p>目前各电商，还有超市啥的，民间组织，社区志愿者很多都提供了送货服务，暂时物资不是一个明显的障碍，过得去，当然这也是保障群众心理稳定的最基础。</p>
+<p>现在已经是所有小区封锁了，门口都靠铁栅栏封起来，俨然一副戒严状态。</p>
+<h1 id="谣言"><a href="#谣言" class="headerlink" title="谣言"></a>谣言</h1><p>2020年了，相较于2003年，整整十几年过去了，通讯的发展简直是突飞猛进，目前如火如荼的5G，似乎在这场没有硝烟的战争中更凸显出他的价值。整个战“疫”过程也是一场与谣言的的较量，也许是因为大家太闲了，也许是有些人唯恐天下不乱，各种谣言纷飞，即使是我们这种在互联网环境下培养起来的人，尚且难以分辨，何况是父母一辈的。</p>
+<p>很不错的是几大互联网公司纷纷站了出来，各种辟谣平台出来，官方处理谣言的速度也加快了一节。</p>
+<p>谣言往往是造成恐慌的一个很大的原因，还是要多思考自己判断，判断不了的，就带着怀疑的心态去小心求证吧。</p>
+<h1 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h1><p>现在大家似乎习惯了，每天早上起床，点开各大互联网门户，看看今天又增加了多少，然后关掉，记的世卫组织在说起中国疫情的时候强调，这不是仅仅是数字，而是一个个鲜活的生命。确实，位于疫情风眼武汉的我，听到看到很多的消息，甚至是自己或家人认识的人，许多家人奔赴一线，默默的为他们担忧，回过头来想想，那每一个确诊的病例，他的家人，何尝不是这样担心的呢？</p>
+<p>好在是现在数据公开的算及时，公开性和透明性也提升了许多，值得欣慰，这是国家的进步，社会的进步。</p>
+<h1 id="希望"><a href="#希望" class="headerlink" title="希望"></a>希望</h1><p>最近天气转好，打开窗户亦会吹来让人慵懒的春风，窗外虽是一片萧条，但我相信，希望就在前方，我们相约过早，吃热干面，吃豆皮，我们相约逛武大，看樱花，我们相约大排档，喝点小酒吃烧烤，请大家不要放弃心中的希望！武汉加油！中国加油！</p>
+]]></content>
+      <categories>
+        <category>武汉新冠疫情</category>
+      </categories>
+      <tags>
+        <tag>战疫</tag>
+        <tag>test</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>利用C#和Echarts开发流量占有率对比小工具</title>
+    <url>/2017/07/21/cs-echarts/</url>
+    <content><![CDATA[<blockquote>
+<p><del>网易也把评论关了，不知啥原因，所以有问题的话，大家还是邮件联系吧，目前难找到一个国内的公共留言平台了，桑心！</del> 后来还是找到替代方案了。</p>
+</blockquote>
+<h1 id="事情由来"><a href="#事情由来" class="headerlink" title="事情由来"></a>事情由来</h1><p>最近在研究检测器数据，对数据的研究通常需要有一个直观的认识，但是由于数据量非常大，时间跨度也非常长，之前利用python或者matlab生成的静态图片已经不能满足我的需求，突然在Echarts上看到一个模板如下图，发现还挺适合我的需求的，就想着利用Echarts来展示。</p>
+<a id="more"></a>
+<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/1.png?x-oss-process=style/sy-highq" alt="对比图"></p>
+<h1 id="萌生的思路"><a href="#萌生的思路" class="headerlink" title="萌生的思路"></a>萌生的思路</h1><p>受限于自身水平和数据环境原因，为了做这个小工具，也走了不少弯路，有一些想法也可能很笨拙，将中间遇到的问题进行总结，希望帮助到大家，也希望大家给我更好的建议。（PS:如果大家问我为啥不用JAVA，因为这个我还不会，而且赶时间[捂脸]）</p>
+<h2 id="思路1：利用Python完成"><a href="#思路1：利用Python完成" class="headerlink" title="思路1：利用Python完成"></a>思路1：利用Python完成</h2><p>大致的想法是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;更新了发现原来hexo默认不能解析流程图，重新加个流程图，这个也留着，当做对应吧</span><br><span class="line">st&#x3D;&gt;start</span><br><span class="line">dj&#x3D;&gt;operation: 利用django构建简单web平台</span><br><span class="line">or&#x3D;&gt;operation: 读取oracle数据库</span><br><span class="line">js&#x3D;&gt;operation: 生成json文件</span><br><span class="line">ec&#x3D;&gt;operation: Echarts读取json文件生成图形</span><br><span class="line">e&#x3D;&gt;end</span><br><span class="line">st(right)-&gt;dj(right)-&gt;or-&gt;js-&gt;ec-&gt;e</span><br></pre></td></tr></table></figure>
+<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/3.png?x-oss-process=style/sy-highq" alt="python流程图"><br>然而这个想法很快就夭折了，因为python链接oracle实在是太坑了，涉及到了很多编码问题和软件位数问题。链接需要一个叫做cx_oracle的包，因为要用plsql（32位），所以之前装了一个32位的oracle客户端，而数据库服务器上装的是64位的oracle，我自己的python版本的3.4 64位，所以就安装了64位的cx_oracle，中间自己编译还遇到了找不到vs10的编译执行文件的问题，通过SET设置环境变量解决了。最终装上了，结果遇上了编码问题，无法导入包。读取数据库是最关键的步骤，这一步解决不了，我只有放弃这个思路了。</p>
+<h2 id="思路2：利用C-完成"><a href="#思路2：利用C-完成" class="headerlink" title="思路2：利用C#完成"></a>思路2：利用C#完成</h2><p>原本使用python是希望可以直接利用里面的包进行分析，然后想想选择一个折中的方式吧，反正都是生成了json文件，pandas可以直接读取，干脆把展示和分析分为两个部分。<br>C#去直连oracle数据库是比较简单的，同时可以嵌入一个浏览器的控件去展示最后生成的页面，因此就产生了下面的想法：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">st&#x3D;&gt;start</span><br><span class="line">c&#x3D;&gt;operation: C# winform</span><br><span class="line">web&#x3D;&gt;operation: 浏览器控件</span><br><span class="line">or&#x3D;&gt;operation: oracle链接查询类</span><br><span class="line">js&#x3D;&gt;operation: json文件</span><br><span class="line">ec&#x3D;&gt;operation: echarts加载</span><br><span class="line">e&#x3D;&gt;end</span><br><span class="line">st(right)-&gt;c</span><br><span class="line">c-&gt;or(right)-&gt;js(right)-&gt;web(right)-&gt;ec(right)-&gt;e</span><br></pre></td></tr></table></figure>
+<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/4.png?x-oss-process=style/sy-highq" alt="c#流程图"><br>为了实现这个想法，主要需要解决以下问题：</p>
+<ol>
+<li>C#链接数据库并执行查询工作<br>这个过程比较简单，网上有大量的方法去解决这个数据库连接与查询的问题，在此就不赘述。</li>
+<li>将查询的文件按照json格式保存<br>由于json格式还是相对比较自由，主要看的两种方式(其他的嵌套方式在这里不考虑)：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#第一种方式</span><br><span class="line">&#123;</span><br><span class="line">&quot;key1&quot;:[value1,value2,...],</span><br><span class="line">&quot;key2&quot;:[value1,value2,...]</span><br><span class="line">&#125;</span><br><span class="line">#第二种方式</span><br><span class="line">&#123;</span><br><span class="line">[&#123;&quot;key1&quot;:value1,&quot;key2&quot;:value1,...&#125;,</span><br><span class="line">&#123;&quot;key1&quot;:value2,&quot;key2&quot;:value2,...&#125;]</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+为了便于从数据库数据中写出数据，这里采用了第一种存储方式，利用C#流写出一个json文件，对json格式拿不准了可以在网上找个格式校验的分析一下生成的格式是否有问题。</li>
+<li>Echarts文件加载本地的json文件<br>在这一步上有若干的问题，我采用浏览器加载本地html文件，而利用echarts的js包加载数据需要JQ的支持，因此在本地的html文件中至少加载两个js文件，一个echarts的，一个JQ的。<br>因为考虑要异步的加载数据，数据是不可能写死在html文件中，因此必须使用JQ。这里出现了几个问题：</li>
+</ol>
+<ul>
+<li>C#默认的浏览器内核是IE的（我这里应该是IE11），需要在html文件中写适配才能够执行js的文件。</li>
+<li>JQ出于安全性考虑，是无法加载本机（Windows）的文件路径的，必须通过服务器返回json文件。如果你在html的js块中写了加载本地文件的语句，利用chrome调试，会提示没有权限加载本地文件。为了解决这个问题，在本机搭了一个IIS服务器，通过localhost返回json文件。此时又出现一个问题，就是JQ跨域加载文件的问题，由于在本机测试，我这里采用了一个不安全的做法，在IIS的配置中设置如下（IE10以下似乎是不支持的）：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">header(&quot;Access-Control-Allow-Origin:*&quot;);</span><br><span class="line">&#x2F;*星号表示所有的域都可以接受，*&#x2F;</span><br><span class="line">header(&quot;Access-Control-Allow-Methods:GET,POST&quot;);</span><br></pre></td></tr></table></figure>
+之后JQ就能加载到本地文件了。<br>到这里大多数的问题都解决了，采用了一个笨拙的方法去解决一个问题，其实有时候也挺有趣的。<br>最后的效果就是这样：<img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/2.png?x-oss-process=style/sy-highq" alt="软件界面"></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Echarts</category>
+      </categories>
+      <tags>
+        <tag>小软件</tag>
+        <tag>C#</tag>
+        <tag>echarts</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>关于信号周期问题的思考</title>
     <url>/2017/11/24/cycle/</url>
     <content><![CDATA[<h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>最近很多接触到了好几个领导，都对周期有不同的理解和认识，也将这些观念灌输到低层的调整方案的民警脑中。最为一个信号控制专业出身的学生，对于周期这个概念又是重新进行思考，发现在国内这儿复杂的交通环境下，很多问题细想也挺纠结：</p>
@@ -346,43 +421,6 @@
       </categories>
       <tags>
         <tag>杂谈</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>利用C#和Echarts开发流量占有率对比小工具</title>
-    <url>/2017/07/21/cs-echarts/</url>
-    <content><![CDATA[<blockquote>
-<p><del>网易也把评论关了，不知啥原因，所以有问题的话，大家还是邮件联系吧，目前难找到一个国内的公共留言平台了，桑心！</del> 后来还是找到替代方案了。</p>
-</blockquote>
-<h1 id="事情由来"><a href="#事情由来" class="headerlink" title="事情由来"></a>事情由来</h1><p>最近在研究检测器数据，对数据的研究通常需要有一个直观的认识，但是由于数据量非常大，时间跨度也非常长，之前利用python或者matlab生成的静态图片已经不能满足我的需求，突然在Echarts上看到一个模板如下图，发现还挺适合我的需求的，就想着利用Echarts来展示。</p>
-<a id="more"></a>
-<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/1.png?x-oss-process=style/sy-highq" alt="对比图"></p>
-<h1 id="萌生的思路"><a href="#萌生的思路" class="headerlink" title="萌生的思路"></a>萌生的思路</h1><p>受限于自身水平和数据环境原因，为了做这个小工具，也走了不少弯路，有一些想法也可能很笨拙，将中间遇到的问题进行总结，希望帮助到大家，也希望大家给我更好的建议。（PS:如果大家问我为啥不用JAVA，因为这个我还不会，而且赶时间[捂脸]）</p>
-<h2 id="思路1：利用Python完成"><a href="#思路1：利用Python完成" class="headerlink" title="思路1：利用Python完成"></a>思路1：利用Python完成</h2><p>大致的想法是这样的：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;更新了发现原来hexo默认不能解析流程图，重新加个流程图，这个也留着，当做对应吧</span><br><span class="line">st&#x3D;&gt;start</span><br><span class="line">dj&#x3D;&gt;operation: 利用django构建简单web平台</span><br><span class="line">or&#x3D;&gt;operation: 读取oracle数据库</span><br><span class="line">js&#x3D;&gt;operation: 生成json文件</span><br><span class="line">ec&#x3D;&gt;operation: Echarts读取json文件生成图形</span><br><span class="line">e&#x3D;&gt;end</span><br><span class="line">st(right)-&gt;dj(right)-&gt;or-&gt;js-&gt;ec-&gt;e</span><br></pre></td></tr></table></figure>
-<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/3.png?x-oss-process=style/sy-highq" alt="python流程图"><br>然而这个想法很快就夭折了，因为python链接oracle实在是太坑了，涉及到了很多编码问题和软件位数问题。链接需要一个叫做cx_oracle的包，因为要用plsql（32位），所以之前装了一个32位的oracle客户端，而数据库服务器上装的是64位的oracle，我自己的python版本的3.4 64位，所以就安装了64位的cx_oracle，中间自己编译还遇到了找不到vs10的编译执行文件的问题，通过SET设置环境变量解决了。最终装上了，结果遇上了编码问题，无法导入包。读取数据库是最关键的步骤，这一步解决不了，我只有放弃这个思路了。</p>
-<h2 id="思路2：利用C-完成"><a href="#思路2：利用C-完成" class="headerlink" title="思路2：利用C#完成"></a>思路2：利用C#完成</h2><p>原本使用python是希望可以直接利用里面的包进行分析，然后想想选择一个折中的方式吧，反正都是生成了json文件，pandas可以直接读取，干脆把展示和分析分为两个部分。<br>C#去直连oracle数据库是比较简单的，同时可以嵌入一个浏览器的控件去展示最后生成的页面，因此就产生了下面的想法：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">st&#x3D;&gt;start</span><br><span class="line">c&#x3D;&gt;operation: C# winform</span><br><span class="line">web&#x3D;&gt;operation: 浏览器控件</span><br><span class="line">or&#x3D;&gt;operation: oracle链接查询类</span><br><span class="line">js&#x3D;&gt;operation: json文件</span><br><span class="line">ec&#x3D;&gt;operation: echarts加载</span><br><span class="line">e&#x3D;&gt;end</span><br><span class="line">st(right)-&gt;c</span><br><span class="line">c-&gt;or(right)-&gt;js(right)-&gt;web(right)-&gt;ec(right)-&gt;e</span><br></pre></td></tr></table></figure>
-<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/4.png?x-oss-process=style/sy-highq" alt="c#流程图"><br>为了实现这个想法，主要需要解决以下问题：</p>
-<ol>
-<li>C#链接数据库并执行查询工作<br>这个过程比较简单，网上有大量的方法去解决这个数据库连接与查询的问题，在此就不赘述。</li>
-<li>将查询的文件按照json格式保存<br>由于json格式还是相对比较自由，主要看的两种方式(其他的嵌套方式在这里不考虑)：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#第一种方式</span><br><span class="line">&#123;</span><br><span class="line">&quot;key1&quot;:[value1,value2,...],</span><br><span class="line">&quot;key2&quot;:[value1,value2,...]</span><br><span class="line">&#125;</span><br><span class="line">#第二种方式</span><br><span class="line">&#123;</span><br><span class="line">[&#123;&quot;key1&quot;:value1,&quot;key2&quot;:value1,...&#125;,</span><br><span class="line">&#123;&quot;key1&quot;:value2,&quot;key2&quot;:value2,...&#125;]</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-为了便于从数据库数据中写出数据，这里采用了第一种存储方式，利用C#流写出一个json文件，对json格式拿不准了可以在网上找个格式校验的分析一下生成的格式是否有问题。</li>
-<li>Echarts文件加载本地的json文件<br>在这一步上有若干的问题，我采用浏览器加载本地html文件，而利用echarts的js包加载数据需要JQ的支持，因此在本地的html文件中至少加载两个js文件，一个echarts的，一个JQ的。<br>因为考虑要异步的加载数据，数据是不可能写死在html文件中，因此必须使用JQ。这里出现了几个问题：</li>
-</ol>
-<ul>
-<li>C#默认的浏览器内核是IE的（我这里应该是IE11），需要在html文件中写适配才能够执行js的文件。</li>
-<li>JQ出于安全性考虑，是无法加载本机（Windows）的文件路径的，必须通过服务器返回json文件。如果你在html的js块中写了加载本地文件的语句，利用chrome调试，会提示没有权限加载本地文件。为了解决这个问题，在本机搭了一个IIS服务器，通过localhost返回json文件。此时又出现一个问题，就是JQ跨域加载文件的问题，由于在本机测试，我这里采用了一个不安全的做法，在IIS的配置中设置如下（IE10以下似乎是不支持的）：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">header(&quot;Access-Control-Allow-Origin:*&quot;);</span><br><span class="line">&#x2F;*星号表示所有的域都可以接受，*&#x2F;</span><br><span class="line">header(&quot;Access-Control-Allow-Methods:GET,POST&quot;);</span><br></pre></td></tr></table></figure>
-之后JQ就能加载到本地文件了。<br>到这里大多数的问题都解决了，采用了一个笨拙的方法去解决一个问题，其实有时候也挺有趣的。<br>最后的效果就是这样：<img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/2.png?x-oss-process=style/sy-highq" alt="软件界面"></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Echarts</category>
-      </categories>
-      <tags>
-        <tag>小软件</tag>
-        <tag>C#</tag>
-        <tag>echarts</tag>
       </tags>
   </entry>
   <entry>
@@ -709,6 +747,27 @@
       </tags>
   </entry>
   <entry>
+    <title>NEMA结构介绍及synchro软件配时</title>
+    <url>/2017/06/13/nema/</url>
+    <content><![CDATA[<h1 id="双环结构"><a href="#双环结构" class="headerlink" title="双环结构"></a>双环结构</h1><p>双环结构（dual-ring）是由美国电气制造商协会（National Electrical Manufacturers Association，NEMA）制定的交通信号控制行业标准。<br>为深入浅出的解释清楚这个问题，这里将介绍一种典型的双环结构，将不会涉及更复杂的变换以及行人，更多介绍可以自行的查看美国交通部网站相关介绍<a href="https://ops.fhwa.dot.gov/trafficanalysistools/tat_vol4/app_f.htm">Actuated Signal Control</a>、<a href="https://www.fhwa.dot.gov/publications/research/safety/04091/04.cfm">Signalized Intersections: Informational Guide</a>。该网站有很多有用的信息，有兴趣的可以多学习。在VISSIM和SYNCHRO仿真软件中都涉及相关该标准。<br>在正式介绍之前，为避免不必要的误解，将首先比对一下中国和美国在相位这个术语上的区别。</p>
+<a id="more"></a>
+<h2 id="对比中国美国相位概念"><a href="#对比中国美国相位概念" class="headerlink" title="对比中国美国相位概念"></a>对比中国美国相位概念</h2><p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema1.png?x-oss-process=style/sy-highq" alt="中国美国相位对比图"><br>中国的规范中国规定一股或多股交通流同时获得稳定通行权所对应的逻辑信号灯组的显示状态，而对于NEMA规范中，每一个方向就代表一个相位，组合起来构成一个阶段。<br>这两种定义均有优劣势，个人认为NEMA这个控制方式对于写程序和控制来说更加灵活；而国内的方式比较直观。<br><strong>后文将以NEMA结构中的相关概念进行介绍！</strong></p>
+<h2 id="典型的双环结构"><a href="#典型的双环结构" class="headerlink" title="典型的双环结构"></a>典型的双环结构</h2><p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema2.gif?x-oss-process=style/sy-highq" alt="典型双环结构1"><br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema3.gif?x-oss-process=style/sy-highq" alt="典型双环结构2"><br>这个是典型的双环结构示意图，为什么叫双环，图中1,2,3,4和5,6,7,8分别构成一个环，两个环中的每个相位分别按顺序循环切换。可以看到纵向的有两个屏障（barriers），当两个环的相位到达屏障相位时，必须同时切换到下一个相位。<br>说的有点拗口了，说的简单一点，可以看到相位1（东左转）与相位5（西左转）可以同时放行，不产生冲突，同时相位1（东左转）和相位6（东直行）也可以同时放行，不产生冲突。<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema4.png?x-oss-process=style/sy-highq" alt="分隔栏"><br>因此可以构成多个灵活的阶段结构。<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema5.png?x-oss-process=style/sy-highq" alt="分隔栏"><br>前半段（东西方向）转换成为我们熟悉的相位（阶段）如下图：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema8.png?x-oss-process=style/sy-highq" alt="新相位"><br>其他的灵活配置同理，同样我们也可以调整环中左转直行相位的顺序，来达到不同的配置的目的，所谓的lead-lead，lead-leg就是针对左转直行的放置位置而言，在绿波配置的时候，这些设置都会产生不同的效果。<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema6.gif?x-oss-process=style/sy-highq" alt="改相位"><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema7.gif?x-oss-process=style/sy-highq" alt="改相位"><br>上面就是对双环结构的一个简要的介绍，希望多了解的朋友可以进一步找一些文献和标准进行深入学习。接下来就针对许多对synchro软件配时云里雾里的朋友介绍一下，利用双环结构图配置信号控制方案。</p>
+<h1 id="介绍synchro中利用双环配时"><a href="#介绍synchro中利用双环配时" class="headerlink" title="介绍synchro中利用双环配时"></a>介绍synchro中利用双环配时</h1><p>采用的路网文件为synchro自带示例<strong>Basic 2P w Porkchops.syn</strong>。路口很简单，如下图：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro1.png?x-oss-process=style/sy-highq" alt="synchro示例图"><br>该示例中，默认的配置方案为南北左直右-东西左直右的两相位（阶段）结构，首先来看下默认的设置参数。<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro2.png?x-oss-process=style/sy-highq" alt="synchro示例图"><br>请注意图中红框区域的编号，该编号及对应了在双环结构中的相位编号，最下边也展示出此配置方案的效果，如下图其对应的双环绘出：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro3.png?x-oss-process=style/sy-highq" alt="默认参数对应双环"></p>
+<h2 id="将该路口方案改为三相位方案"><a href="#将该路口方案改为三相位方案" class="headerlink" title="将该路口方案改为三相位方案"></a>将该路口方案改为三相位方案</h2><p>要求：希望将南北对向同时方向，东西直行左转分开。相位图：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro4.png?x-oss-process=style/sy-highq" alt="三相位图"><br>对应配置成双环内的相位结构如下：<br><font color=red>特别注意，在放相位时要保障，相位1与相位5/6不能冲突，不要把同一个方向的自行和左转放到了一个环中。</font><br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro6.png?x-oss-process=style/sy-highq" alt="三相位双环"><br>配置进synchro中的结构与结果：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro8.png?x-oss-process=style/sy-highq" alt="三相位synchro"></p>
+<h2 id="将该路口方案改为四相位方案"><a href="#将该路口方案改为四相位方案" class="headerlink" title="将该路口方案改为四相位方案"></a>将该路口方案改为四相位方案</h2><p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro5.png?x-oss-process=style/sy-highq" alt="四相位图"><br>对应配置成双环内的相位结构如下：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro7.png?x-oss-process=style/sy-highq" alt="四相位双环"><br>配置进synchro中的结构与结果：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro9.png?x-oss-process=style/sy-highq" alt="四相位synchro"><br>其他的更加复杂的控制方式配置就不一一给大家展示了，以大家的聪明智慧，一定能举一反三。至于在相位设置中的保护相位允许相位，在这里就不做过多的介绍了。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>到此整个双环结构的介绍以及在synchro中如何设置配时方案就就介绍完了，其实双环结构比较适合程序的控制，在平时的二次开发和信号控制算法控制中也是很常用的。</p>
+]]></content>
+      <categories>
+        <category>Vissim</category>
+      </categories>
+      <tags>
+        <tag>教程</tag>
+        <tag>nema</tag>
+        <tag>synchro</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>项目建议书和工程可行性研究的区别</title>
     <url>/2021/08/13/project-1/</url>
     <content><![CDATA[<h1 id="项目建议书和可行性研究报告的区别："><a href="#项目建议书和可行性研究报告的区别：" class="headerlink" title="项目建议书和可行性研究报告的区别："></a>项目建议书和可行性研究报告的区别：</h1><h2 id="1-定义不同，适用范围不同："><a href="#1-定义不同，适用范围不同：" class="headerlink" title="1. 定义不同，适用范围不同："></a>1. 定义不同，适用范围不同：</h2><ul>
@@ -740,24 +799,20 @@
       </tags>
   </entry>
   <entry>
-    <title>NEMA结构介绍及synchro软件配时</title>
-    <url>/2017/06/13/nema/</url>
-    <content><![CDATA[<h1 id="双环结构"><a href="#双环结构" class="headerlink" title="双环结构"></a>双环结构</h1><p>双环结构（dual-ring）是由美国电气制造商协会（National Electrical Manufacturers Association，NEMA）制定的交通信号控制行业标准。<br>为深入浅出的解释清楚这个问题，这里将介绍一种典型的双环结构，将不会涉及更复杂的变换以及行人，更多介绍可以自行的查看美国交通部网站相关介绍<a href="https://ops.fhwa.dot.gov/trafficanalysistools/tat_vol4/app_f.htm">Actuated Signal Control</a>、<a href="https://www.fhwa.dot.gov/publications/research/safety/04091/04.cfm">Signalized Intersections: Informational Guide</a>。该网站有很多有用的信息，有兴趣的可以多学习。在VISSIM和SYNCHRO仿真软件中都涉及相关该标准。<br>在正式介绍之前，为避免不必要的误解，将首先比对一下中国和美国在相位这个术语上的区别。</p>
+    <title>上海新生活</title>
+    <url>/2021/07/30/shanghai-new-life/</url>
+    <content><![CDATA[<p>并没有想到会这么快，感觉像是有一只无形的大手，不断的将我向前push，push，以至于我还没有完全想清楚，就把我放在了这个位置————就这样我又要回到上海了。</p>
 <a id="more"></a>
-<h2 id="对比中国美国相位概念"><a href="#对比中国美国相位概念" class="headerlink" title="对比中国美国相位概念"></a>对比中国美国相位概念</h2><p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema1.png?x-oss-process=style/sy-highq" alt="中国美国相位对比图"><br>中国的规范中国规定一股或多股交通流同时获得稳定通行权所对应的逻辑信号灯组的显示状态，而对于NEMA规范中，每一个方向就代表一个相位，组合起来构成一个阶段。<br>这两种定义均有优劣势，个人认为NEMA这个控制方式对于写程序和控制来说更加灵活；而国内的方式比较直观。<br><strong>后文将以NEMA结构中的相关概念进行介绍！</strong></p>
-<h2 id="典型的双环结构"><a href="#典型的双环结构" class="headerlink" title="典型的双环结构"></a>典型的双环结构</h2><p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema2.gif?x-oss-process=style/sy-highq" alt="典型双环结构1"><br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema3.gif?x-oss-process=style/sy-highq" alt="典型双环结构2"><br>这个是典型的双环结构示意图，为什么叫双环，图中1,2,3,4和5,6,7,8分别构成一个环，两个环中的每个相位分别按顺序循环切换。可以看到纵向的有两个屏障（barriers），当两个环的相位到达屏障相位时，必须同时切换到下一个相位。<br>说的有点拗口了，说的简单一点，可以看到相位1（东左转）与相位5（西左转）可以同时放行，不产生冲突，同时相位1（东左转）和相位6（东直行）也可以同时放行，不产生冲突。<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema4.png?x-oss-process=style/sy-highq" alt="分隔栏"><br>因此可以构成多个灵活的阶段结构。<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema5.png?x-oss-process=style/sy-highq" alt="分隔栏"><br>前半段（东西方向）转换成为我们熟悉的相位（阶段）如下图：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema8.png?x-oss-process=style/sy-highq" alt="新相位"><br>其他的灵活配置同理，同样我们也可以调整环中左转直行相位的顺序，来达到不同的配置的目的，所谓的lead-lead，lead-leg就是针对左转直行的放置位置而言，在绿波配置的时候，这些设置都会产生不同的效果。<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema6.gif?x-oss-process=style/sy-highq" alt="改相位"><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nema7.gif?x-oss-process=style/sy-highq" alt="改相位"><br>上面就是对双环结构的一个简要的介绍，希望多了解的朋友可以进一步找一些文献和标准进行深入学习。接下来就针对许多对synchro软件配时云里雾里的朋友介绍一下，利用双环结构图配置信号控制方案。</p>
-<h1 id="介绍synchro中利用双环配时"><a href="#介绍synchro中利用双环配时" class="headerlink" title="介绍synchro中利用双环配时"></a>介绍synchro中利用双环配时</h1><p>采用的路网文件为synchro自带示例<strong>Basic 2P w Porkchops.syn</strong>。路口很简单，如下图：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro1.png?x-oss-process=style/sy-highq" alt="synchro示例图"><br>该示例中，默认的配置方案为南北左直右-东西左直右的两相位（阶段）结构，首先来看下默认的设置参数。<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro2.png?x-oss-process=style/sy-highq" alt="synchro示例图"><br>请注意图中红框区域的编号，该编号及对应了在双环结构中的相位编号，最下边也展示出此配置方案的效果，如下图其对应的双环绘出：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro3.png?x-oss-process=style/sy-highq" alt="默认参数对应双环"></p>
-<h2 id="将该路口方案改为三相位方案"><a href="#将该路口方案改为三相位方案" class="headerlink" title="将该路口方案改为三相位方案"></a>将该路口方案改为三相位方案</h2><p>要求：希望将南北对向同时方向，东西直行左转分开。相位图：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro4.png?x-oss-process=style/sy-highq" alt="三相位图"><br>对应配置成双环内的相位结构如下：<br><font color=red>特别注意，在放相位时要保障，相位1与相位5/6不能冲突，不要把同一个方向的自行和左转放到了一个环中。</font><br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro6.png?x-oss-process=style/sy-highq" alt="三相位双环"><br>配置进synchro中的结构与结果：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro8.png?x-oss-process=style/sy-highq" alt="三相位synchro"></p>
-<h2 id="将该路口方案改为四相位方案"><a href="#将该路口方案改为四相位方案" class="headerlink" title="将该路口方案改为四相位方案"></a>将该路口方案改为四相位方案</h2><p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro5.png?x-oss-process=style/sy-highq" alt="四相位图"><br>对应配置成双环内的相位结构如下：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro7.png?x-oss-process=style/sy-highq" alt="四相位双环"><br>配置进synchro中的结构与结果：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/nema/nemasynchro9.png?x-oss-process=style/sy-highq" alt="四相位synchro"><br>其他的更加复杂的控制方式配置就不一一给大家展示了，以大家的聪明智慧，一定能举一反三。至于在相位设置中的保护相位允许相位，在这里就不做过多的介绍了。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>到此整个双环结构的介绍以及在synchro中如何设置配时方案就就介绍完了，其实双环结构比较适合程序的控制，在平时的二次开发和信号控制算法控制中也是很常用的。</p>
-]]></content>
-      <categories>
-        <category>Vissim</category>
-      </categories>
+
+<p>这种感觉很神奇，就像前几天走在巨龙路上，仿佛回到了五年前刚参加工作的日子，来到上海仿佛回到了那时候鼓足勇气又没有勇气留在上海的日子，是的，我错过一次机会了，不想再错过。</p>
+<p>接下来的生活充满未知，充满挑战，对于刚进入而立之年的我，却是有一种异常的激动，那种让自己年轻的激动。</p>
+<p>人说进步是不断突破舒适区的禁锢，一个自愿堕落而又不甘堕落的我，还需要为家人拼一把，为她们能过上更好、更自由的日子。</p>
+<p>晚上发生了一些略不愉快的事情，以至于差点耽误了一些正事，喝了功能饮料又在这里瞎想，亦像是头脑空白敲着没有营养的文字，好像许多人生中重要的决策，也都不是0和1的绝对对立，也不是谋定而后动，是在前进的路上，不断的修正自己的走向，毕竟外界的自主可控因素太少了。</p>
+<p>近期疫情风声又紧了，这玩意咋就没法断根呢？</p>
+<p>好了，没营养的文字少说一点吧。</p>
+<h3 id="“我还是从前那个少年，没有一丝丝改变！”-不忘初心，砥砺前行，加油吧！"><a href="#“我还是从前那个少年，没有一丝丝改变！”-不忘初心，砥砺前行，加油吧！" class="headerlink" title="“我还是从前那个少年，没有一丝丝改变！” 不忘初心，砥砺前行，加油吧！"></a>“我还是从前那个少年，没有一丝丝改变！” 不忘初心，砥砺前行，加油吧！</h3>]]></content>
       <tags>
-        <tag>教程</tag>
-        <tag>nema</tag>
-        <tag>synchro</tag>
+        <tag>杂谈</tag>
       </tags>
   </entry>
   <entry>
@@ -795,20 +850,25 @@
       </tags>
   </entry>
   <entry>
-    <title>上海新生活</title>
-    <url>/2021/07/30/shanghai-new-life/</url>
-    <content><![CDATA[<p>并没有想到会这么快，感觉像是有一只无形的大手，不断的将我向前push，push，以至于我还没有完全想清楚，就把我放在了这个位置————就这样我又要回到上海了。</p>
+    <title>分享一个Word技巧文档</title>
+    <url>/2020/11/09/shareword/</url>
+    <content><![CDATA[<p>真的是一个久违的师弟，很久没联系了，偶然在朋友圈看到他写的《能干掉加班的操作手册-WORD篇》，看起来应该是一个系列操作手册，我看了一下确实写的很详细，也都是常见的一些麻烦点，忍不住想分享给大家。</p>
+<p>已经获得作者授权，同样也对作者保持尊重！</p>
 <a id="more"></a>
 
-<p>这种感觉很神奇，就像前几天走在巨龙路上，仿佛回到了五年前刚参加工作的日子，来到上海仿佛回到了那时候鼓足勇气又没有勇气留在上海的日子，是的，我错过一次机会了，不想再错过。</p>
-<p>接下来的生活充满未知，充满挑战，对于刚进入而立之年的我，却是有一种异常的激动，那种让自己年轻的激动。</p>
-<p>人说进步是不断突破舒适区的禁锢，一个自愿堕落而又不甘堕落的我，还需要为家人拼一把，为她们能过上更好、更自由的日子。</p>
-<p>晚上发生了一些略不愉快的事情，以至于差点耽误了一些正事，喝了功能饮料又在这里瞎想，亦像是头脑空白敲着没有营养的文字，好像许多人生中重要的决策，也都不是0和1的绝对对立，也不是谋定而后动，是在前进的路上，不断的修正自己的走向，毕竟外界的自主可控因素太少了。</p>
-<p>近期疫情风声又紧了，这玩意咋就没法断根呢？</p>
-<p>好了，没营养的文字少说一点吧。</p>
-<h3 id="“我还是从前那个少年，没有一丝丝改变！”-不忘初心，砥砺前行，加油吧！"><a href="#“我还是从前那个少年，没有一丝丝改变！”-不忘初心，砥砺前行，加油吧！" class="headerlink" title="“我还是从前那个少年，没有一丝丝改变！” 不忘初心，砥砺前行，加油吧！"></a>“我还是从前那个少年，没有一丝丝改变！” 不忘初心，砥砺前行，加油吧！</h3>]]></content>
+<p>贴个目录看看，如果你觉得对你有用，可以移步文章最后下载。</p>
+<p><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/shareword/shareword1.png?x-oss-process=style/sy-highq" alt="目录1"></p>
+<p><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/shareword/shareword2.png?x-oss-process=style/sy-highq" alt="目录2"></p>
+<p><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/shareword/shareword3.png?x-oss-process=style/sy-highq"></p>
+<p>下载链接：<a href="https://flypigblog.oss-cn-beijing.aliyuncs.com/files/%E8%83%BD%E5%B9%B2%E6%8E%89%E5%8A%A0%E7%8F%AD%E7%9A%84%E6%93%8D%E4%BD%9C%E6%89%8B%E5%86%8C%E4%B9%8BWORD%E7%AF%87V1.pdf">《能干掉加班的操作手册-WORD篇》</a></p>
+<p>希望能帮助到大家！</p>
+]]></content>
+      <categories>
+        <category>办公软件</category>
+      </categories>
       <tags>
-        <tag>杂谈</tag>
+        <tag>效率</tag>
+        <tag>技巧</tag>
       </tags>
   </entry>
   <entry>
@@ -830,28 +890,6 @@
       </categories>
       <tags>
         <tag>劳动节</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>分享一个Word技巧文档</title>
-    <url>/2020/11/09/shareword/</url>
-    <content><![CDATA[<p>真的是一个久违的师弟，很久没联系了，偶然在朋友圈看到他写的《能干掉加班的操作手册-WORD篇》，看起来应该是一个系列操作手册，我看了一下确实写的很详细，也都是常见的一些麻烦点，忍不住想分享给大家。</p>
-<p>已经获得作者授权，同样也对作者保持尊重！</p>
-<a id="more"></a>
-
-<p>贴个目录看看，如果你觉得对你有用，可以移步文章最后下载。</p>
-<p><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/shareword/shareword1.png?x-oss-process=style/sy-highq" alt="目录1"></p>
-<p><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/shareword/shareword2.png?x-oss-process=style/sy-highq" alt="目录2"></p>
-<p><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/shareword/shareword3.png?x-oss-process=style/sy-highq"></p>
-<p>下载链接：<a href="https://flypigblog.oss-cn-beijing.aliyuncs.com/files/%E8%83%BD%E5%B9%B2%E6%8E%89%E5%8A%A0%E7%8F%AD%E7%9A%84%E6%93%8D%E4%BD%9C%E6%89%8B%E5%86%8C%E4%B9%8BWORD%E7%AF%87V1.pdf">《能干掉加班的操作手册-WORD篇》</a></p>
-<p>希望能帮助到大家！</p>
-]]></content>
-      <categories>
-        <category>办公软件</category>
-      </categories>
-      <tags>
-        <tag>效率</tag>
-        <tag>技巧</tag>
       </tags>
   </entry>
   <entry>
@@ -903,44 +941,6 @@
 ]]></content>
       <tags>
         <tag>update</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>一个疫情笼罩下的春节</title>
-    <url>/2020/04/01/covid2019/</url>
-    <content><![CDATA[<p>一个特殊的春节，在瘟疫的笼罩下，所有的人都人心惶惶，大家每天看着不断增加的数字，仿佛成为了大家的习惯。</p>
-<h1 id="初识"><a href="#初识" class="headerlink" title="初识"></a>初识</h1><p>记得还是元旦之前，出差去上海，老婆突然急急忙忙给我发了消息问我从哪个火车站走的，说是可能有类似于SARS的病又来了，当然很快官方有了声明，未发现人传人的迹象，自然我也信了，毕竟是官方公告。</p>
-<p>接下来得一段时间，就一直出差，基本都没捞着回家，最后一站在连云港，公司开完年会，结束了一年的工作分公司的小伙伴准备一起回家，而那几天风声已经愈发的紧了，记得回武汉的那天早上，去杰瑞宾馆对面的药店买口罩，药店的阿姨还很奇怪为何我买好几包。</p>
-<p>回到武汉，最后两天班，正是钟南山院士宣布病毒会人传人的时候，明显感觉到大家开始慌了，地铁里戴口罩的人明显多了很多。</p>
-<p>接着我们放假了，武汉成为了众矢之的，成了“过街老鼠”，接着就如现在一样武汉“封城”了。</p>
-<a id="more"></a>
-
-<h1 id="封城"><a href="#封城" class="headerlink" title="封城"></a>封城</h1><p>我不喜欢这个词，却又很形象，我却是从来也没想象过，在有生之年居然能遇到电影里的场景，一个千万级人口城市，宣布严控进出，体育场和展览馆变成放舱医院。</p>
-<p>不少外地的好友给我消息，关心状况，希望想办法能帮助到我，说真的，挺感动的。</p>
-<p>好了，在家宅着也变成对社会最大的贡献了。</p>
-<h1 id="生日"><a href="#生日" class="headerlink" title="生日"></a>生日</h1><p>Mia的农历生日是初六，因为疫情没法家庭聚会，就准备紧着家里的几口人给她过生日，其他家人视频连线。</p>
-<p>作为女儿的周岁生日，自然是打算好好给她布置一番，好在是提前买了气球，大年二十九，想着给先布置起来，也给家里增加一点喜气，结果晚上十一点对，一辆救护车的闪光映入眼帘，因为在一楼看的很清楚，后面就听说楼上的一户家里确诊了，当时看到全副武装的医护人员在自家楼栋拖走人的时候，还是心里咯噔了一下，老婆也吓坏了，我们一起把大门口消毒，给她平复了一下心情。</p>
-<p>初六，给宝宝做了蛋糕，做了视频，办了抓周仪式；二月十号，宝宝公历生日，原本以为我们可以在海底捞举办一个生日party，也只能是原班人马，剧情再来一遍。</p>
-<h1 id="战“疫”"><a href="#战“疫”" class="headerlink" title="战“疫”"></a>战“疫”</h1><p>今年过年由于小孩比较小，放弃了回汉南那边，让爸妈过来了，爸年三十才放假，拖了大包小包的菜水果种种过来。</p>
-<p>结果疫情的发展，有点猝不及防，关键是又赶上了中国特色的世界级的人口迁移活动——“春运”，控制的难度可想而知。</p>
-<p>父亲是个老党员，很快就被召集回单位，去支援社区的工作，大年初二，在武汉升级交通管制的头一天，急急忙忙被召唤回去，参与到战“疫”的第一线。很担心，但是我知道这是他必须做的。而我每天负责了解同事们的身体状态，也为内部防控做自己的努力。</p>
-<h1 id="物资"><a href="#物资" class="headerlink" title="物资"></a>物资</h1><p>“封城”之后，各大超市的物资几乎都被洗劫一空，好在是爸大年三十过来带来了大量的物资，足以让我们应对了半个月多，然而这只是我们，也只是温饱问题。</p>
-<p>医疗物资一直是紧缺的，从红十字会的事情，到各大医院纷纷求助，都暴露出医疗物资的极度匮乏，好在是在连云港买了点口罩，回来发现根本买不到。双黄连的乌龙也是增大了交叉感染的机会，恐慌之下，没有多少人是真正能判断是非的，不过谁叫这个新闻是从官媒出来的呢。</p>
-<p>目前各电商，还有超市啥的，民间组织，社区志愿者很多都提供了送货服务，暂时物资不是一个明显的障碍，过得去，当然这也是保障群众心理稳定的最基础。</p>
-<p>现在已经是所有小区封锁了，门口都靠铁栅栏封起来，俨然一副戒严状态。</p>
-<h1 id="谣言"><a href="#谣言" class="headerlink" title="谣言"></a>谣言</h1><p>2020年了，相较于2003年，整整十几年过去了，通讯的发展简直是突飞猛进，目前如火如荼的5G，似乎在这场没有硝烟的战争中更凸显出他的价值。整个战“疫”过程也是一场与谣言的的较量，也许是因为大家太闲了，也许是有些人唯恐天下不乱，各种谣言纷飞，即使是我们这种在互联网环境下培养起来的人，尚且难以分辨，何况是父母一辈的。</p>
-<p>很不错的是几大互联网公司纷纷站了出来，各种辟谣平台出来，官方处理谣言的速度也加快了一节。</p>
-<p>谣言往往是造成恐慌的一个很大的原因，还是要多思考自己判断，判断不了的，就带着怀疑的心态去小心求证吧。</p>
-<h1 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h1><p>现在大家似乎习惯了，每天早上起床，点开各大互联网门户，看看今天又增加了多少，然后关掉，记的世卫组织在说起中国疫情的时候强调，这不是仅仅是数字，而是一个个鲜活的生命。确实，位于疫情风眼武汉的我，听到看到很多的消息，甚至是自己或家人认识的人，许多家人奔赴一线，默默的为他们担忧，回过头来想想，那每一个确诊的病例，他的家人，何尝不是这样担心的呢？</p>
-<p>好在是现在数据公开的算及时，公开性和透明性也提升了许多，值得欣慰，这是国家的进步，社会的进步。</p>
-<h1 id="希望"><a href="#希望" class="headerlink" title="希望"></a>希望</h1><p>最近天气转好，打开窗户亦会吹来让人慵懒的春风，窗外虽是一片萧条，但我相信，希望就在前方，我们相约过早，吃热干面，吃豆皮，我们相约逛武大，看樱花，我们相约大排档，喝点小酒吃烧烤，请大家不要放弃心中的希望！武汉加油！中国加油！</p>
-]]></content>
-      <categories>
-        <category>武汉新冠疫情</category>
-      </categories>
-      <tags>
-        <tag>test</tag>
-        <tag>战疫</tag>
       </tags>
   </entry>
   <entry>
@@ -1014,24 +1014,6 @@
       </tags>
   </entry>
   <entry>
-    <title>生活中许多事就是北辙南辕</title>
-    <url>/2021/08/28/wrongroad/</url>
-    <content><![CDATA[<blockquote>
-<p>告臣曰：‘我欲之楚。’臣曰：‘君之楚，将奚为北面?’曰：‘吾马良。’臣曰：‘马虽良，此非楚之路也。’曰：‘吾用多。’臣曰：‘用虽多，此非楚之路也。’曰：‘吾御者善。’此数者愈善，而离楚愈远耳。————南辕北辙的典故</p>
-</blockquote>
-<a id="more"></a>
-
-<p>离家28天，应该是结婚之后最长的一次分别了，甚是想念。最近老婆安利了一个剧，北辙南辕，大半夜一个人看完，却是如鲠在喉。晚上一位很好的朋友给我说了一个出乎意料却又情理之中的决定，想想自己走的路，突然挺佩服冯导的构思了————生活本就是许多的南辕北辙嘛。</p>
-<p>许久以前，一位很好的哥们给我说过道理，人生追求的是什么，追求的是一种精神上的享受，也就是幸福感吧。那么如果狭义的理解这个享受，就会出现一个死循环，挣钱-没时间陪家人-幸福感降低-为提升幸福感-花时间陪家人-少加班-挣不到钱。广义的说幸福感，就是任何能够让你获取满足感的事情，这其实就跟给人的追求相关了，也跟每个人所处的阶段相关。</p>
-<p>其实我们党早就给大家想清楚了这些事情——道路问题是最根本的问题,道路决定命运,道路决定前途。所以选择有时候比努力更重要，只是这个路，似乎有时候并不是特别好选择。</p>
-<p>最近在一个新的地方历练，很多认知都开始刷新，脱离舒适区。</p>
-<p>为了更好地未来，加油吧少年。</p>
-]]></content>
-      <tags>
-        <tag>杂谈</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Vissim COM接口教程--VISSIM数据提取（二）</title>
     <url>/2016/04/04/vissimcom2/</url>
     <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>距离上一篇的教程已经过去了好久了，为了写毕业论文，似乎没有思路和激情来写这部分教程了。<br>闲话少说了，上一批的引用环境是VISSIM7.0+VS2013，由于VISSIM7.0的COM接口无法提取出检测器(DataCollection)中占有率的数据，因此我在后续的研究中重新采用VISSIM5.4+VS2013的环境，主要采用C#。<br><strong>本篇的主要内容为如何从VISSIM中提取所需要的数据。</strong></p>
@@ -1071,6 +1053,24 @@
       <tags>
         <tag>vissim</tag>
         <tag>教程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>生活中许多事就是北辙南辕</title>
+    <url>/2021/08/28/wrongroad/</url>
+    <content><![CDATA[<blockquote>
+<p>告臣曰：‘我欲之楚。’臣曰：‘君之楚，将奚为北面?’曰：‘吾马良。’臣曰：‘马虽良，此非楚之路也。’曰：‘吾用多。’臣曰：‘用虽多，此非楚之路也。’曰：‘吾御者善。’此数者愈善，而离楚愈远耳。————南辕北辙的典故</p>
+</blockquote>
+<a id="more"></a>
+
+<p>离家28天，应该是结婚之后最长的一次分别了，甚是想念。最近老婆安利了一个剧，北辙南辕，大半夜一个人看完，却是如鲠在喉。晚上一位很好的朋友给我说了一个出乎意料却又情理之中的决定，想想自己走的路，突然挺佩服冯导的构思了————生活本就是许多的南辕北辙嘛。</p>
+<p>许久以前，一位很好的哥们给我说过道理，人生追求的是什么，追求的是一种精神上的享受，也就是幸福感吧。那么如果狭义的理解这个享受，就会出现一个死循环，挣钱-没时间陪家人-幸福感降低-为提升幸福感-花时间陪家人-少加班-挣不到钱。广义的说幸福感，就是任何能够让你获取满足感的事情，这其实就跟给人的追求相关了，也跟每个人所处的阶段相关。</p>
+<p>其实我们党早就给大家想清楚了这些事情——道路问题是最根本的问题,道路决定命运,道路决定前途。所以选择有时候比努力更重要，只是这个路，似乎有时候并不是特别好选择。</p>
+<p>最近在一个新的地方历练，很多认知都开始刷新，脱离舒适区。</p>
+<p>为了更好地未来，加油吧少年。</p>
+]]></content>
+      <tags>
+        <tag>杂谈</tag>
       </tags>
   </entry>
   <entry>
