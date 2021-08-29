@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"flypig.cc","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="最近感觉什么都需要学习，这里先记录一下学习mysql的一些笔记，备忘，也算是帮助同学习的整理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MYSQL学习笔记">
+<meta property="og:url" content="http://flypig.cc/2015/09/17/mysql/index.html">
+<meta property="og:site_name" content="Life of Flypig">
+<meta property="og:description" content="最近感觉什么都需要学习，这里先记录一下学习mysql的一些笔记，备忘，也算是帮助同学习的整理。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2015-09-17T15:43:52.000Z">
+<meta property="article:modified_time" content="2015-09-28T14:43:00.000Z">
+<meta property="article:author" content="ShengFa Zhu">
+<meta property="article:tag" content="studying">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://flypig.cc/2015/09/17/mysql/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>MYSQL学习笔记 | Life of Flypig</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?2cc841311492f462c33b1aa0825e1c7a";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Life of Flypig</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://flypig.cc/2015/09/17/mysql/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/favicon.ico">
+      <meta itemprop="name" content="ShengFa Zhu">
+      <meta itemprop="description" content="keep working and learning!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Life of Flypig">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MYSQL学习笔记
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-09-17 23:43:52" itemprop="dateCreated datePublished" datetime="2015-09-17T23:43:52+08:00">2015-09-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2015-09-28 22:43:00" itemprop="dateModified" datetime="2015-09-28T22:43:00+08:00">2015-09-28</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/hello-world/" itemprop="url" rel="index"><span itemprop="name">hello world</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2015/09/17/mysql/" class="post-meta-item leancloud_visitors" data-flag-title="MYSQL学习笔记" title="Views">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine: </span>
+    
+    <a title="valine" href="/2015/09/17/mysql/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2015/09/17/mysql/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近感觉什么都需要学习，这里先记录一下学习mysql的一些笔记，备忘，也算是帮助同学习的整理。</p>
+<a id="more"></a>
+
+<hr>
+<h1 id="MYSQL的基本管理"><a href="#MYSQL的基本管理" class="headerlink" title="MYSQL的基本管理"></a>MYSQL的基本管理</h1><ul>
+<li>打开/关闭MYSQL服务(管理员CMD):<code>net start/stop mysql_name</code></li>
+<li>登录MYSQL:<code>mysql -u[name] -p[password] -h[hostname] </code><ul>
+<li><code>-D</code> 打开指定数据库</li>
+<li><code>-P</code>端口号</li>
+<li><code>--prompt</code>修改修饰符</li>
+</ul>
+</li>
+<li>退出MYSQL:<code>exit</code> <code>quit</code> <code>\q</code></li>
+<li>其他命令:<ul>
+<li>帮助:<code>help [name]</code> <code>? [name]</code> <code>\h [name]</code></li>
+<li>不执行当前输入: <code>\c</code></li>
+<li>修改命令提示符:<code>prompt</code> <code>\D</code>:日期 <code>\h</code>:主机 <code>\u</code>:用户 <code>\d</code>:打开的数据库</li>
+<li>输入书写日志:<code>\T [path]</code>:开启  <code>\t</code>:关闭日志记录</li>
+<li>默认分隔符为 <code>;</code> 或<code>\g</code> 可通过<code>delimiter</code>修改(PS:注意每条SQL的语句后面必须加上分隔符才会执行)</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h1 id="SQL常用命令"><a href="#SQL常用命令" class="headerlink" title="SQL常用命令"></a>SQL常用命令</h1><blockquote>
+<p><strong>SQL语句规范</strong>:不区分大小写，但是约定规范为关键字和函数大写，数据库名称，表名称，字段名称小写。(PS:不是程序必须，而是良好习惯！)</p>
+</blockquote>
+<blockquote>
+<p>Mysql注释: <code>#</code> 或 <code>--</code></p>
+</blockquote>
+<h2 id="数据库管理"><a href="#数据库管理" class="headerlink" title="数据库管理"></a>数据库管理</h2><ul>
+<li>创建数据库: <code>CREATE &#123;DATABASE|SCHEMA&#125; [IF NOT EXISTS]db_name [DEFAULT CHARACTER SET utf8]</code></li>
+<li>查看命令: <ul>
+<li>查看当前数据库: <code>SHOW &#123;DATABASE|SCHEMA&#125;</code></li>
+<li>查看创建数据库时相关信息:<code>SHOW CREATE &#123;DATABASE|SCHEMA&#125; db_name</code></li>
+<li>查看打开的数据库:<code>SELECT DATABASE()</code></li>
+</ul>
+</li>
+<li>修改数据库编码方式:<code>ALTER &#123;DATABASE|SCHEMA&#125; db_name DEFAULT CHARACTER SET utf8</code></li>
+<li>打开数据库:<code>USE db_name</code></li>
+<li>删除数据库:<code>DROP DATABASE [IF EXISTS] db_name</code></li>
+</ul>
+<h2 id="表管理"><a href="#表管理" class="headerlink" title="表管理"></a>表管理</h2><ul>
+<li><p>创建表:<code>CREATE TABLE [IF NOT EXISTS] tbl_name(datafield datatype and constraints,) ENGINE=engine_name</code></p>
+<blockquote>
+<ul>
+<li>当建表时存在中文是需要临时设定编码为GBK:<code>SET NAMES GBK</code></li>
+<li>字段注释: 建表时候在字段后添加: <code>COMMENT &#39;text&#39;</code></li>
+</ul>
+</blockquote>
+</li>
+<li><p>删除表：<code>DROP TABLE [IF EXISTS] table_name</code></p>
+</li>
+<li><p>完整性约束条件，字段后添加：</p>
+<ul>
+<li>主键；<code>[PRIMARY] KEY</code></li>
+<li>唯一性约束：<code>UNIQUE</code>(一个表只有一个主键，但可有多个唯一，NULL不算唯一)</li>
+<li>无符号约束: <code>UNSIGNED</code></li>
+<li>自增长：<code>AUTO_INCREMENT</code> (被标注为自增长的一定是主键)</li>
+<li>非空约束：<code>NOT NULL</code></li>
+<li>默认值：<code>DEFAULT</code> (一般与非空约束一起用)</li>
+<li>零填充(无符号，按照最长的显示长度进行补0): <code>ZEROFILE</code></li>
+</ul>
+</li>
+<li><p>查看命令:</p>
+<ul>
+<li>查看当前数据库存在的表: <code>SHOW TABLES</code></li>
+<li>查看创建表时的详细信息：<code>SHOW CREATE TABLE table_names</code></li>
+<li>查看表结构:<code>DESC table_name</code>  <code>SHOW COLUMNS FROM table_name</code></li>
+</ul>
+</li>
+<li><p>修改表结构：</p>
+<ul>
+<li>修改表名：<code>ALTER TABLE table_name1 RENAME [TO/AS] table_name2</code></li>
+<li>添加字段：`ALTER TABLE table_name ADD datafield_name datatype [AFTER datafield1]</li>
+<li>删除字段：<code>ALTER TABLE table_name DORP datafield_name</code></li>
+<li>修改字段：<code>ALTER TABLE table_name MODIFY datafield_name datatype</code></li>
+<li>添加删除默认值：<code>ALTER TABLE table_name ALTER datafield_name SET/DROP DEFAULT value</code></li>
+<li>添加删除主键：<code>ALTER TABLE table_name ADD/DROP PRIMARY KEY(datafield)</code></li>
+<li>添加删除唯一：<code>ALTER TABLE table_name ADD/DROP UNIQUE (datafield)</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="数据管理"><a href="#数据管理" class="headerlink" title="数据管理"></a>数据管理</h2><ul>
+<li>插入数据:<ul>
+<li><code>INSERT [INTO] table_name(datafield1,...,datafield2) VALUE (value1,value1)</code></li>
+<li><code>INSERT table_name SET datafield=value</code></li>
+<li><code>INSERT table_name1 SELECT datafield FROM table_name2</code></li>
+</ul>
+</li>
+<li>更新和修改数据<ul>
+<li><code>UPDATE table_name SET datafield=value [WHERE ][ORDER BY ]</code></li>
+</ul>
+</li>
+<li>删除数据<ul>
+<li><code>DELETE FROM table_name [WHERE ][ORDER BY ]</code></li>
+</ul>
+</li>
+<li>清空数据<ul>
+<li><code>TRUNCATE [TABLE] table_name</code></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h1 id="MYSQL辅助知识"><a href="#MYSQL辅助知识" class="headerlink" title="MYSQL辅助知识"></a>MYSQL辅助知识</h1><h2 id="常用数据格式"><a href="#常用数据格式" class="headerlink" title="常用数据格式"></a>常用数据格式</h2><table>
+<thead>
+<tr>
+<th>数据类型</th>
+<th>对应关键字</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>整形类型</td>
+<td><code>TINYINT</code> <code>SMALLINT</code> <code>MEDIUMINT</code> <code>INT</code> <code>BIGINT</code> <code>TINYINT(1)</code></td>
+</tr>
+<tr>
+<td>浮点类型</td>
+<td><code>FLOAT[(M,N)]</code> <code>DOUBLE[(M,N)]</code> <code>DECIMAL[(M,N)]</code> <code>M:</code>总位数  <code>N:</code>小数点位数</td>
+</tr>
+<tr>
+<td>字符串类型</td>
+<td><code>CHAR(N)</code> <code>VARCHAR(N)</code> <code>TINYTEXT</code> <code>MEDIUMTEXT</code> <code>LONGTEXT</code> <code>ENUM(&#39;value1&#39;,&#39;value2&#39;...)</code>[单选] <code>SET(&#39;value1&#39;,&#39;value2&#39;...)</code>[可多选]</td>
+</tr>
+<tr>
+<td>时间类型</td>
+<td><code>TIME</code> <code>DATE</code> <code>DATETIME</code> <code>YEAR</code></td>
+</tr>
+</tbody></table>
+<p><em>当遇到不明白的情况时，请多用help!</em></p>
+<h2 id="数据引擎"><a href="#数据引擎" class="headerlink" title="数据引擎"></a>数据引擎</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/studying/" rel="tag"># studying</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2015/09/13/test/" rel="prev" title="Echarts 测试">
+      <i class="fa fa-chevron-left"></i> Echarts 测试
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2015/09/30/legion/" rel="next" title="Legion行人仿真软件">
+      Legion行人仿真软件 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MYSQL%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%AE%A1%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">MYSQL的基本管理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SQL%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">2.</span> <span class="nav-text">SQL常用命令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E7%AE%A1%E7%90%86"><span class="nav-number">2.1.</span> <span class="nav-text">数据库管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8%E7%AE%A1%E7%90%86"><span class="nav-number">2.2.</span> <span class="nav-text">表管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86"><span class="nav-number">2.3.</span> <span class="nav-text">数据管理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MYSQL%E8%BE%85%E5%8A%A9%E7%9F%A5%E8%AF%86"><span class="nav-number">3.</span> <span class="nav-text">MYSQL辅助知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E6%A0%BC%E5%BC%8F"><span class="nav-number">3.1.</span> <span class="nav-text">常用数据格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BC%95%E6%93%8E"><span class="nav-number">3.2.</span> <span class="nav-text">数据引擎</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ShengFa Zhu"
+      src="https://flypigblog.oss-cn-beijing.aliyuncs.com/favicon.ico">
+  <p class="site-author-name" itemprop="name">ShengFa Zhu</p>
+  <div class="site-description" itemprop="description">keep working and learning!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tjflypig" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tjflypig" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tjzsf90@163.com" title="E-Mail → mailto:tjzsf90@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="http://www.zhihu.com/people/zhu-sheng-fa" title="知乎 → http:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;zhu-sheng-fa" rel="noopener" target="_blank"><i class="fab diamond fa-fw"></i>知乎</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="http://weibo.com/1831937800/profile?topnav=1&wvr=6" title="微博 → http:&#x2F;&#x2F;weibo.com&#x2F;1831937800&#x2F;profile?topnav&#x3D;1&amp;wvr&#x3D;6" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>微博</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Life of Flypig</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+
+
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"icgmp5aN0qPXXuShat527iJO-gzGzoHsz","app_key":"L3677JgSxJ0yb86A71k25kcw","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'icgmp5aN0qPXXuShat527iJO-gzGzoHsz',
+      appKey     : 'L3677JgSxJ0yb86A71k25kcw',
+      placeholder: "Welcome to the world of flypig!",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="mask-icon" href="/images/favicon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"flypig.cc","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前言其实自己的写的是一个非常小的程序，不过根据《大话设计模式》的书中来说，再小的程序也可以体现出设计模式。虽然很早之前就看了设计模式的相关技巧，可能是自己的语言功底不够，在实现上面总是懵懵懂懂，好像知道大体的概念，具体的实现却常常浅尝辄止。这次在完成VISSIM-ORACLE的仿真平台过程中，一个被放在第一节的简单工厂模式就让自己吃了不少苦头，因此，需要进行一定的总结。在完成这篇日志时，C++属于">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计模式初探-VISSIM中简单工厂模式">
+<meta property="og:url" content="http://flypig.cc/2016/08/31/c-design/index.html">
+<meta property="og:site_name" content="Life of Flypig">
+<meta property="og:description" content="前言其实自己的写的是一个非常小的程序，不过根据《大话设计模式》的书中来说，再小的程序也可以体现出设计模式。虽然很早之前就看了设计模式的相关技巧，可能是自己的语言功底不够，在实现上面总是懵懵懂懂，好像知道大体的概念，具体的实现却常常浅尝辄止。这次在完成VISSIM-ORACLE的仿真平台过程中，一个被放在第一节的简单工厂模式就让自己吃了不少苦头，因此，需要进行一定的总结。在完成这篇日志时，C++属于">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-08-31T13:44:04.000Z">
+<meta property="article:modified_time" content="2021-05-03T14:28:54.077Z">
+<meta property="article:author" content="ShengFa Zhu">
+<meta property="article:tag" content="vissim">
+<meta property="article:tag" content="教程">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://flypig.cc/2016/08/31/c-design/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>设计模式初探-VISSIM中简单工厂模式 | Life of Flypig</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?2cc841311492f462c33b1aa0825e1c7a";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Life of Flypig</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://flypig.cc/2016/08/31/c-design/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/favicon.ico">
+      <meta itemprop="name" content="ShengFa Zhu">
+      <meta itemprop="description" content="keep working and learning!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Life of Flypig">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          设计模式初探-VISSIM中简单工厂模式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2016-08-31 21:44:04" itemprop="dateCreated datePublished" datetime="2016-08-31T21:44:04+08:00">2016-08-31</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-05-03 22:28:54" itemprop="dateModified" datetime="2021-05-03T22:28:54+08:00">2021-05-03</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Vissim-C/" itemprop="url" rel="index"><span itemprop="name">Vissim,C++</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2016/08/31/c-design/" class="post-meta-item leancloud_visitors" data-flag-title="设计模式初探-VISSIM中简单工厂模式" title="Views">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine: </span>
+    
+    <a title="valine" href="/2016/08/31/c-design/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2016/08/31/c-design/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>其实自己的写的是一个非常小的程序，不过根据《大话设计模式》的书中来说，再小的程序也可以体现出设计模式。<br>虽然很早之前就看了设计模式的相关技巧，可能是自己的语言功底不够，在实现上面总是懵懵懂懂，好像知道大体的概念，具体的实现却常常浅尝辄止。这次在完成VISSIM-ORACLE的仿真平台过程中，一个被放在第一节的简单工厂模式就让自己吃了不少苦头，因此，需要进行一定的总结。<br>在完成这篇日志时，C++属于初学阶段，代码有问题或者可优化的地方请大家指出，多谢。</p>
+<a id="more"></a>
+
+<h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>VISSIM提供了COM接口，提供了很多与VISSIM中对应的类型，在使用这些类型的时候，由于大多数学习交通的同学对语言并不熟悉或者对设计模式并不熟悉，导致在调用VISSIM对象时候，在主函数会出现下面的代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;C++ code</span><br><span class="line">&#x2F;&#x2F;COM调用过程省略</span><br><span class="line">IVissimPtr VissimPrt ; </span><br><span class="line">IVehicleInputPtr VI1 &#x3D; VissimPrt -&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(1);</span><br><span class="line">IVehicleInputPtr VI2 &#x3D; VissimPrt -&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(2);</span><br><span class="line">&#x2F;&#x2F;...其他类似</span><br></pre></td></tr></table></figure>
+<p>每次在使用的时候都新建一个实例个人觉得是非常落后和笨的方法，少量的对象引用可以采用，但是大量的不同类型的对象会出现后面代码十分难维护的问题。而且每个新建的对象的性能开销在那，会影响性能（学习C++之后才开始重视性能方面）。</p>
+<h1 id="基本实现过程"><a href="#基本实现过程" class="headerlink" title="基本实现过程"></a>基本实现过程</h1><p>简单工厂模式是设计模式里面比较初级的模式了，基本就是用到了简单的继承和多态知识。主要的作用在于按照自己的需求来返回相应的类型对象。</p>
+<h2 id="抽象基类和子类"><a href="#抽象基类和子类" class="headerlink" title="抽象基类和子类"></a>抽象基类和子类</h2><p>在实现简单工厂模式需要为工厂建立一个基类，基类应该包含所有类型的基本信息。<br>在调用VISSIM的过程中，我们主要的目标基本是<strong>从对应的VISSIM对象中读取数据和向对应的VISSIM对象中写入数据</strong>，因此可以抽象出base类，然后在派生出几个VISSIM对象类，这里只举个简单例子。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjBase.h</span><br><span class="line">&#x2F;&#x2F;vissim对象的基类</span><br><span class="line">class VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">protected:</span><br><span class="line">    VissimBase* vissimbase_;&#x2F;&#x2F;这是自己建立的vissim类，与c++调用vissim无关</span><br><span class="line">    long id_;</span><br><span class="line">    _bstr_t keyword_;</span><br><span class="line">public:</span><br><span class="line">    VissimObjectBase(VissimBase*,long,char*);</span><br><span class="line">    ~VissimObjectBase();</span><br><span class="line">    virtual double GetValue();</span><br><span class="line">&#125;;</span><br><span class="line">&#x2F;&#x2F;车辆输入类，公有继承</span><br><span class="line">class VissimVehInp:public VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    VissimVehInp(VissimBase* VB,long id,char* kw):VissimObjectBase(VB,id,kw)&#123;&#125;;</span><br><span class="line">    double GetValue() override;</span><br><span class="line">&#125;;</span><br><span class="line">&#x2F;&#x2F;检测器类</span><br><span class="line">class VissimDataColl:public VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    VissimDataColl(VissimBase* VB,long id,char* kw):VissimObjectBase(VB,id,kw)&#123;&#125;;</span><br><span class="line">    double GetValue() override;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;&#x2F;&#x2F;VisObjBase.cpp</span><br><span class="line">VissimObjectBase::VissimObjectBase(VissimBase* vissimbase,long id,char* keyword)</span><br><span class="line">&#123;</span><br><span class="line">    this-&gt;vissimbase_ &#x3D; vissimbase;</span><br><span class="line">    this-&gt;id_ &#x3D; id;</span><br><span class="line">    this-&gt;keyword_ &#x3D; _com_util::ConvertStringToBSTR(keyword);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">double VissimObjectBase::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F;各类获取参数实现</span><br><span class="line">double VissimVehInp::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        VARIANT var &#x3D;  vissimbase_-&gt;GetVissim()-&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(id_)-&gt;GetAttValue(_bstr_t(keyword_));</span><br><span class="line">        return var.dblVal;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">double VissimDataColl::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        VARIANT var &#x3D; vissimbase_-&gt;GetVissim()-&gt;GetNet()-&gt;GetDataCollections()-&gt;GetDataCollectionByNumber(id_)-&gt;GetAttValue(_bstr_t(keyword_));</span><br><span class="line">        return var.dblVal;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>在创建类型中的几个tips：</strong></p>
+<ul>
+<li>抽象出所有类都需要的方法，并用虚函数表示，在其他子类中进行override</li>
+<li>基类中的对象的属性设置注意，private在子类中无法访问</li>
+<li>子类采用公有继承的方式</li>
+</ul>
+<h2 id="工厂类实现"><a href="#工厂类实现" class="headerlink" title="工厂类实现"></a>工厂类实现</h2><p>在实现工厂过程中，需要用一个“代号”去表征创建的类是什么，这里基于两个方面（对C++字符串理解不深入，以及尝试map容器）采用map方式实现。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjFac.h</span><br><span class="line">#include &lt;map&gt;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">class VissimObjectFactory</span><br><span class="line">&#123;</span><br><span class="line">private:</span><br><span class="line">    typedef map&lt;string,int&gt; MatchMap;</span><br><span class="line">    MatchMap MatchMap_;</span><br><span class="line">public:</span><br><span class="line">    VissimObjectFactory();</span><br><span class="line">    ~VissimObjectFactory();</span><br><span class="line">    VissimObjectBase* GetVissimObjcet(VissimBase* ,string,long,char*);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjFac.cpp</span><br><span class="line">#include &quot;VisObjFac.h&quot;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">&#x2F;&#x2F;工厂类构造函数</span><br><span class="line">VissimObjectFactory::VissimObjectFactory()</span><br><span class="line">&#123;</span><br><span class="line">    MatchMap_[&quot;VehInp&quot;]&#x3D;1;</span><br><span class="line">    MatchMap_[&quot;DataColl&quot;]&#x3D;2;</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F;析构函数</span><br><span class="line">VissimObjectFactory::~VissimObjectFactory()&#123;&#125;</span><br><span class="line">&#x2F;&#x2F;工厂函数</span><br><span class="line">VissimObjectBase* VissimObjectFactory::GetVissimObjcet(VissimBase* vissimBase,string Type,long ID,char* keyword)</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        int typenum &#x3D; MatchMap_[Type];</span><br><span class="line">        if (typenum &#x3D;&#x3D; 1) return new VissimVehInp(vissimBase,ID,keyword);</span><br><span class="line">        else if (typenum &#x3D;&#x3D; 2) return new VissimDataColl(vissimBase,ID,keyword);</span><br><span class="line">        else return 0;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        std::cout&lt;&lt;e.ErrorMessage()&lt;&lt;std::endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>至此，简单的工厂类就完成了，新建对象只需要用对应的字符串”VehInp”，”DataColl”生成。</p>
+<h2 id="主函数调用"><a href="#主函数调用" class="headerlink" title="主函数调用"></a>主函数调用</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;其他程序略</span><br><span class="line">&#x2F;&#x2F;main.cpp</span><br><span class="line">VissimObjectFactory* objectbase &#x3D;  new VissimObjectFactory();</span><br><span class="line">VissimObjectBase* testinput &#x3D; objectbase-&gt;GetVissimObjcet(vissimBase,&quot;VehInp&quot;,1,&quot;VOLUME&quot;);&#x2F;&#x2F;即可返回id为1的车辆输入对象</span><br><span class="line">testinput &#x3D; objectbase-&gt;GetVissimObjcet(vissimBase,&quot;VehInp&quot;,2,&quot;VOLUME&quot;);&#x2F;&#x2F;即可返回id为2的车辆输入对象</span><br><span class="line">cout&lt;&lt; testinput-&gt;GetValue()&lt;&lt;endl;  </span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/vissim/" rel="tag"># vissim</a>
+              <a href="/tags/%E6%95%99%E7%A8%8B/" rel="tag"># 教程</a>
+              <a href="/tags/C/" rel="tag"># C++</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/26/coracle/" rel="prev" title="C++通过ADO连接ORACLE数据库">
+      <i class="fa fa-chevron-left"></i> C++通过ADO连接ORACLE数据库
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/05/19/update/" rel="next" title="主题更新">
+      主题更新 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E6%8F%8F%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">基本实现过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%BD%E8%B1%A1%E5%9F%BA%E7%B1%BB%E5%92%8C%E5%AD%90%E7%B1%BB"><span class="nav-number">3.1.</span> <span class="nav-text">抽象基类和子类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E5%8E%82%E7%B1%BB%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.2.</span> <span class="nav-text">工厂类实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8"><span class="nav-number">3.3.</span> <span class="nav-text">主函数调用</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ShengFa Zhu"
+      src="https://flypigblog.oss-cn-beijing.aliyuncs.com/favicon.ico">
+  <p class="site-author-name" itemprop="name">ShengFa Zhu</p>
+  <div class="site-description" itemprop="description">keep working and learning!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tjflypig" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tjflypig" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tjzsf90@163.com" title="E-Mail → mailto:tjzsf90@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="http://www.zhihu.com/people/zhu-sheng-fa" title="知乎 → http:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;zhu-sheng-fa" rel="noopener" target="_blank"><i class="fab diamond fa-fw"></i>知乎</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="http://weibo.com/1831937800/profile?topnav=1&wvr=6" title="微博 → http:&#x2F;&#x2F;weibo.com&#x2F;1831937800&#x2F;profile?topnav&#x3D;1&amp;wvr&#x3D;6" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>微博</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Life of Flypig</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+
+
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"icgmp5aN0qPXXuShat527iJO-gzGzoHsz","app_key":"L3677JgSxJ0yb86A71k25kcw","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'icgmp5aN0qPXXuShat527iJO-gzGzoHsz',
+      appKey     : 'L3677JgSxJ0yb86A71k25kcw',
+      placeholder: "Welcome to the world of flypig!",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
