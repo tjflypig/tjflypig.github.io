@@ -91,6 +91,39 @@
       </tags>
   </entry>
   <entry>
+    <title>设计模式初探-VISSIM中简单工厂模式</title>
+    <url>/2016/08/31/c-design/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>其实自己的写的是一个非常小的程序，不过根据《大话设计模式》的书中来说，再小的程序也可以体现出设计模式。<br>虽然很早之前就看了设计模式的相关技巧，可能是自己的语言功底不够，在实现上面总是懵懵懂懂，好像知道大体的概念，具体的实现却常常浅尝辄止。这次在完成VISSIM-ORACLE的仿真平台过程中，一个被放在第一节的简单工厂模式就让自己吃了不少苦头，因此，需要进行一定的总结。<br>在完成这篇日志时，C++属于初学阶段，代码有问题或者可优化的地方请大家指出，多谢。</p>
+<a id="more"></a>
+
+<h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>VISSIM提供了COM接口，提供了很多与VISSIM中对应的类型，在使用这些类型的时候，由于大多数学习交通的同学对语言并不熟悉或者对设计模式并不熟悉，导致在调用VISSIM对象时候，在主函数会出现下面的代码：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;C++ code</span><br><span class="line">&#x2F;&#x2F;COM调用过程省略</span><br><span class="line">IVissimPtr VissimPrt ; </span><br><span class="line">IVehicleInputPtr VI1 &#x3D; VissimPrt -&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(1);</span><br><span class="line">IVehicleInputPtr VI2 &#x3D; VissimPrt -&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(2);</span><br><span class="line">&#x2F;&#x2F;...其他类似</span><br></pre></td></tr></table></figure>
+<p>每次在使用的时候都新建一个实例个人觉得是非常落后和笨的方法，少量的对象引用可以采用，但是大量的不同类型的对象会出现后面代码十分难维护的问题。而且每个新建的对象的性能开销在那，会影响性能（学习C++之后才开始重视性能方面）。</p>
+<h1 id="基本实现过程"><a href="#基本实现过程" class="headerlink" title="基本实现过程"></a>基本实现过程</h1><p>简单工厂模式是设计模式里面比较初级的模式了，基本就是用到了简单的继承和多态知识。主要的作用在于按照自己的需求来返回相应的类型对象。</p>
+<h2 id="抽象基类和子类"><a href="#抽象基类和子类" class="headerlink" title="抽象基类和子类"></a>抽象基类和子类</h2><p>在实现简单工厂模式需要为工厂建立一个基类，基类应该包含所有类型的基本信息。<br>在调用VISSIM的过程中，我们主要的目标基本是<strong>从对应的VISSIM对象中读取数据和向对应的VISSIM对象中写入数据</strong>，因此可以抽象出base类，然后在派生出几个VISSIM对象类，这里只举个简单例子。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjBase.h</span><br><span class="line">&#x2F;&#x2F;vissim对象的基类</span><br><span class="line">class VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">protected:</span><br><span class="line">    VissimBase* vissimbase_;&#x2F;&#x2F;这是自己建立的vissim类，与c++调用vissim无关</span><br><span class="line">    long id_;</span><br><span class="line">    _bstr_t keyword_;</span><br><span class="line">public:</span><br><span class="line">    VissimObjectBase(VissimBase*,long,char*);</span><br><span class="line">    ~VissimObjectBase();</span><br><span class="line">    virtual double GetValue();</span><br><span class="line">&#125;;</span><br><span class="line">&#x2F;&#x2F;车辆输入类，公有继承</span><br><span class="line">class VissimVehInp:public VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    VissimVehInp(VissimBase* VB,long id,char* kw):VissimObjectBase(VB,id,kw)&#123;&#125;;</span><br><span class="line">    double GetValue() override;</span><br><span class="line">&#125;;</span><br><span class="line">&#x2F;&#x2F;检测器类</span><br><span class="line">class VissimDataColl:public VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    VissimDataColl(VissimBase* VB,long id,char* kw):VissimObjectBase(VB,id,kw)&#123;&#125;;</span><br><span class="line">    double GetValue() override;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;&#x2F;&#x2F;VisObjBase.cpp</span><br><span class="line">VissimObjectBase::VissimObjectBase(VissimBase* vissimbase,long id,char* keyword)</span><br><span class="line">&#123;</span><br><span class="line">    this-&gt;vissimbase_ &#x3D; vissimbase;</span><br><span class="line">    this-&gt;id_ &#x3D; id;</span><br><span class="line">    this-&gt;keyword_ &#x3D; _com_util::ConvertStringToBSTR(keyword);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">double VissimObjectBase::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F;各类获取参数实现</span><br><span class="line">double VissimVehInp::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        VARIANT var &#x3D;  vissimbase_-&gt;GetVissim()-&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(id_)-&gt;GetAttValue(_bstr_t(keyword_));</span><br><span class="line">        return var.dblVal;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">double VissimDataColl::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        VARIANT var &#x3D; vissimbase_-&gt;GetVissim()-&gt;GetNet()-&gt;GetDataCollections()-&gt;GetDataCollectionByNumber(id_)-&gt;GetAttValue(_bstr_t(keyword_));</span><br><span class="line">        return var.dblVal;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>在创建类型中的几个tips：</strong></p>
+<ul>
+<li>抽象出所有类都需要的方法，并用虚函数表示，在其他子类中进行override</li>
+<li>基类中的对象的属性设置注意，private在子类中无法访问</li>
+<li>子类采用公有继承的方式</li>
+</ul>
+<h2 id="工厂类实现"><a href="#工厂类实现" class="headerlink" title="工厂类实现"></a>工厂类实现</h2><p>在实现工厂过程中，需要用一个“代号”去表征创建的类是什么，这里基于两个方面（对C++字符串理解不深入，以及尝试map容器）采用map方式实现。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjFac.h</span><br><span class="line">#include &lt;map&gt;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">class VissimObjectFactory</span><br><span class="line">&#123;</span><br><span class="line">private:</span><br><span class="line">    typedef map&lt;string,int&gt; MatchMap;</span><br><span class="line">    MatchMap MatchMap_;</span><br><span class="line">public:</span><br><span class="line">    VissimObjectFactory();</span><br><span class="line">    ~VissimObjectFactory();</span><br><span class="line">    VissimObjectBase* GetVissimObjcet(VissimBase* ,string,long,char*);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjFac.cpp</span><br><span class="line">#include &quot;VisObjFac.h&quot;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">&#x2F;&#x2F;工厂类构造函数</span><br><span class="line">VissimObjectFactory::VissimObjectFactory()</span><br><span class="line">&#123;</span><br><span class="line">    MatchMap_[&quot;VehInp&quot;]&#x3D;1;</span><br><span class="line">    MatchMap_[&quot;DataColl&quot;]&#x3D;2;</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F;析构函数</span><br><span class="line">VissimObjectFactory::~VissimObjectFactory()&#123;&#125;</span><br><span class="line">&#x2F;&#x2F;工厂函数</span><br><span class="line">VissimObjectBase* VissimObjectFactory::GetVissimObjcet(VissimBase* vissimBase,string Type,long ID,char* keyword)</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        int typenum &#x3D; MatchMap_[Type];</span><br><span class="line">        if (typenum &#x3D;&#x3D; 1) return new VissimVehInp(vissimBase,ID,keyword);</span><br><span class="line">        else if (typenum &#x3D;&#x3D; 2) return new VissimDataColl(vissimBase,ID,keyword);</span><br><span class="line">        else return 0;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        std::cout&lt;&lt;e.ErrorMessage()&lt;&lt;std::endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>至此，简单的工厂类就完成了，新建对象只需要用对应的字符串”VehInp”，”DataColl”生成。</p>
+<h2 id="主函数调用"><a href="#主函数调用" class="headerlink" title="主函数调用"></a>主函数调用</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;其他程序略</span><br><span class="line">&#x2F;&#x2F;main.cpp</span><br><span class="line">VissimObjectFactory* objectbase &#x3D;  new VissimObjectFactory();</span><br><span class="line">VissimObjectBase* testinput &#x3D; objectbase-&gt;GetVissimObjcet(vissimBase,&quot;VehInp&quot;,1,&quot;VOLUME&quot;);&#x2F;&#x2F;即可返回id为1的车辆输入对象</span><br><span class="line">testinput &#x3D; objectbase-&gt;GetVissimObjcet(vissimBase,&quot;VehInp&quot;,2,&quot;VOLUME&quot;);&#x2F;&#x2F;即可返回id为2的车辆输入对象</span><br><span class="line">cout&lt;&lt; testinput-&gt;GetValue()&lt;&lt;endl;  </span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>Vissim,C++</category>
+      </categories>
+      <tags>
+        <tag>vissim</tag>
+        <tag>教程</tag>
+        <tag>C++</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>C-V2X学习札记</title>
     <url>/2020/08/21/c-v2x/</url>
     <content><![CDATA[<h1 id="什么是V2X"><a href="#什么是V2X" class="headerlink" title="什么是V2X"></a>什么是V2X</h1><p>V2X（Vehicle to Everything）是车与外界进行信息交换的一种通信方式，包括：车 与车之间的直接通信（V2V）；汽车与行人通信（V2P）；汽车与道路基础设施通信（V2I）； 以及车辆通过移动网络与云端进行通信（V2N）。</p>
@@ -144,114 +177,6 @@
       </categories>
       <tags>
         <tag>studying</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>设计模式初探-VISSIM中简单工厂模式</title>
-    <url>/2016/08/31/c-design/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>其实自己的写的是一个非常小的程序，不过根据《大话设计模式》的书中来说，再小的程序也可以体现出设计模式。<br>虽然很早之前就看了设计模式的相关技巧，可能是自己的语言功底不够，在实现上面总是懵懵懂懂，好像知道大体的概念，具体的实现却常常浅尝辄止。这次在完成VISSIM-ORACLE的仿真平台过程中，一个被放在第一节的简单工厂模式就让自己吃了不少苦头，因此，需要进行一定的总结。<br>在完成这篇日志时，C++属于初学阶段，代码有问题或者可优化的地方请大家指出，多谢。</p>
-<a id="more"></a>
-
-<h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>VISSIM提供了COM接口，提供了很多与VISSIM中对应的类型，在使用这些类型的时候，由于大多数学习交通的同学对语言并不熟悉或者对设计模式并不熟悉，导致在调用VISSIM对象时候，在主函数会出现下面的代码：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;C++ code</span><br><span class="line">&#x2F;&#x2F;COM调用过程省略</span><br><span class="line">IVissimPtr VissimPrt ; </span><br><span class="line">IVehicleInputPtr VI1 &#x3D; VissimPrt -&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(1);</span><br><span class="line">IVehicleInputPtr VI2 &#x3D; VissimPrt -&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(2);</span><br><span class="line">&#x2F;&#x2F;...其他类似</span><br></pre></td></tr></table></figure>
-<p>每次在使用的时候都新建一个实例个人觉得是非常落后和笨的方法，少量的对象引用可以采用，但是大量的不同类型的对象会出现后面代码十分难维护的问题。而且每个新建的对象的性能开销在那，会影响性能（学习C++之后才开始重视性能方面）。</p>
-<h1 id="基本实现过程"><a href="#基本实现过程" class="headerlink" title="基本实现过程"></a>基本实现过程</h1><p>简单工厂模式是设计模式里面比较初级的模式了，基本就是用到了简单的继承和多态知识。主要的作用在于按照自己的需求来返回相应的类型对象。</p>
-<h2 id="抽象基类和子类"><a href="#抽象基类和子类" class="headerlink" title="抽象基类和子类"></a>抽象基类和子类</h2><p>在实现简单工厂模式需要为工厂建立一个基类，基类应该包含所有类型的基本信息。<br>在调用VISSIM的过程中，我们主要的目标基本是<strong>从对应的VISSIM对象中读取数据和向对应的VISSIM对象中写入数据</strong>，因此可以抽象出base类，然后在派生出几个VISSIM对象类，这里只举个简单例子。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjBase.h</span><br><span class="line">&#x2F;&#x2F;vissim对象的基类</span><br><span class="line">class VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">protected:</span><br><span class="line">    VissimBase* vissimbase_;&#x2F;&#x2F;这是自己建立的vissim类，与c++调用vissim无关</span><br><span class="line">    long id_;</span><br><span class="line">    _bstr_t keyword_;</span><br><span class="line">public:</span><br><span class="line">    VissimObjectBase(VissimBase*,long,char*);</span><br><span class="line">    ~VissimObjectBase();</span><br><span class="line">    virtual double GetValue();</span><br><span class="line">&#125;;</span><br><span class="line">&#x2F;&#x2F;车辆输入类，公有继承</span><br><span class="line">class VissimVehInp:public VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    VissimVehInp(VissimBase* VB,long id,char* kw):VissimObjectBase(VB,id,kw)&#123;&#125;;</span><br><span class="line">    double GetValue() override;</span><br><span class="line">&#125;;</span><br><span class="line">&#x2F;&#x2F;检测器类</span><br><span class="line">class VissimDataColl:public VissimObjectBase</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    VissimDataColl(VissimBase* VB,long id,char* kw):VissimObjectBase(VB,id,kw)&#123;&#125;;</span><br><span class="line">    double GetValue() override;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;&#x2F;&#x2F;VisObjBase.cpp</span><br><span class="line">VissimObjectBase::VissimObjectBase(VissimBase* vissimbase,long id,char* keyword)</span><br><span class="line">&#123;</span><br><span class="line">    this-&gt;vissimbase_ &#x3D; vissimbase;</span><br><span class="line">    this-&gt;id_ &#x3D; id;</span><br><span class="line">    this-&gt;keyword_ &#x3D; _com_util::ConvertStringToBSTR(keyword);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">double VissimObjectBase::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F;各类获取参数实现</span><br><span class="line">double VissimVehInp::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        VARIANT var &#x3D;  vissimbase_-&gt;GetVissim()-&gt;GetNet()-&gt;GetVehicleInputs()-&gt;GetVehicleInputByNumber(id_)-&gt;GetAttValue(_bstr_t(keyword_));</span><br><span class="line">        return var.dblVal;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">double VissimDataColl::GetValue()</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        VARIANT var &#x3D; vissimbase_-&gt;GetVissim()-&gt;GetNet()-&gt;GetDataCollections()-&gt;GetDataCollectionByNumber(id_)-&gt;GetAttValue(_bstr_t(keyword_));</span><br><span class="line">        return var.dblVal;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;e.ErrorMessage()&lt;&lt;endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong>在创建类型中的几个tips：</strong></p>
-<ul>
-<li>抽象出所有类都需要的方法，并用虚函数表示，在其他子类中进行override</li>
-<li>基类中的对象的属性设置注意，private在子类中无法访问</li>
-<li>子类采用公有继承的方式</li>
-</ul>
-<h2 id="工厂类实现"><a href="#工厂类实现" class="headerlink" title="工厂类实现"></a>工厂类实现</h2><p>在实现工厂过程中，需要用一个“代号”去表征创建的类是什么，这里基于两个方面（对C++字符串理解不深入，以及尝试map容器）采用map方式实现。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjFac.h</span><br><span class="line">#include &lt;map&gt;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">class VissimObjectFactory</span><br><span class="line">&#123;</span><br><span class="line">private:</span><br><span class="line">    typedef map&lt;string,int&gt; MatchMap;</span><br><span class="line">    MatchMap MatchMap_;</span><br><span class="line">public:</span><br><span class="line">    VissimObjectFactory();</span><br><span class="line">    ~VissimObjectFactory();</span><br><span class="line">    VissimObjectBase* GetVissimObjcet(VissimBase* ,string,long,char*);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;VisObjFac.cpp</span><br><span class="line">#include &quot;VisObjFac.h&quot;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">&#x2F;&#x2F;工厂类构造函数</span><br><span class="line">VissimObjectFactory::VissimObjectFactory()</span><br><span class="line">&#123;</span><br><span class="line">    MatchMap_[&quot;VehInp&quot;]&#x3D;1;</span><br><span class="line">    MatchMap_[&quot;DataColl&quot;]&#x3D;2;</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F;析构函数</span><br><span class="line">VissimObjectFactory::~VissimObjectFactory()&#123;&#125;</span><br><span class="line">&#x2F;&#x2F;工厂函数</span><br><span class="line">VissimObjectBase* VissimObjectFactory::GetVissimObjcet(VissimBase* vissimBase,string Type,long ID,char* keyword)</span><br><span class="line">&#123;</span><br><span class="line">    try</span><br><span class="line">    &#123;</span><br><span class="line">        int typenum &#x3D; MatchMap_[Type];</span><br><span class="line">        if (typenum &#x3D;&#x3D; 1) return new VissimVehInp(vissimBase,ID,keyword);</span><br><span class="line">        else if (typenum &#x3D;&#x3D; 2) return new VissimDataColl(vissimBase,ID,keyword);</span><br><span class="line">        else return 0;</span><br><span class="line">    &#125;</span><br><span class="line">    catch(_com_error e)</span><br><span class="line">    &#123;</span><br><span class="line">        std::cout&lt;&lt;e.ErrorMessage()&lt;&lt;std::endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>至此，简单的工厂类就完成了，新建对象只需要用对应的字符串”VehInp”，”DataColl”生成。</p>
-<h2 id="主函数调用"><a href="#主函数调用" class="headerlink" title="主函数调用"></a>主函数调用</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;其他程序略</span><br><span class="line">&#x2F;&#x2F;main.cpp</span><br><span class="line">VissimObjectFactory* objectbase &#x3D;  new VissimObjectFactory();</span><br><span class="line">VissimObjectBase* testinput &#x3D; objectbase-&gt;GetVissimObjcet(vissimBase,&quot;VehInp&quot;,1,&quot;VOLUME&quot;);&#x2F;&#x2F;即可返回id为1的车辆输入对象</span><br><span class="line">testinput &#x3D; objectbase-&gt;GetVissimObjcet(vissimBase,&quot;VehInp&quot;,2,&quot;VOLUME&quot;);&#x2F;&#x2F;即可返回id为2的车辆输入对象</span><br><span class="line">cout&lt;&lt; testinput-&gt;GetValue()&lt;&lt;endl;  </span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>Vissim,C++</category>
-      </categories>
-      <tags>
-        <tag>vissim</tag>
-        <tag>教程</tag>
-        <tag>C++</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>一个疫情笼罩下的春节</title>
-    <url>/2020/04/01/covid2019/</url>
-    <content><![CDATA[<p>一个特殊的春节，在瘟疫的笼罩下，所有的人都人心惶惶，大家每天看着不断增加的数字，仿佛成为了大家的习惯。</p>
-<h1 id="初识"><a href="#初识" class="headerlink" title="初识"></a>初识</h1><p>记得还是元旦之前，出差去上海，老婆突然急急忙忙给我发了消息问我从哪个火车站走的，说是可能有类似于SARS的病又来了，当然很快官方有了声明，未发现人传人的迹象，自然我也信了，毕竟是官方公告。</p>
-<p>接下来得一段时间，就一直出差，基本都没捞着回家，最后一站在连云港，公司开完年会，结束了一年的工作分公司的小伙伴准备一起回家，而那几天风声已经愈发的紧了，记得回武汉的那天早上，去杰瑞宾馆对面的药店买口罩，药店的阿姨还很奇怪为何我买好几包。</p>
-<p>回到武汉，最后两天班，正是钟南山院士宣布病毒会人传人的时候，明显感觉到大家开始慌了，地铁里戴口罩的人明显多了很多。</p>
-<p>接着我们放假了，武汉成为了众矢之的，成了“过街老鼠”，接着就如现在一样武汉“封城”了。</p>
-<a id="more"></a>
-
-<h1 id="封城"><a href="#封城" class="headerlink" title="封城"></a>封城</h1><p>我不喜欢这个词，却又很形象，我却是从来也没想象过，在有生之年居然能遇到电影里的场景，一个千万级人口城市，宣布严控进出，体育场和展览馆变成放舱医院。</p>
-<p>不少外地的好友给我消息，关心状况，希望想办法能帮助到我，说真的，挺感动的。</p>
-<p>好了，在家宅着也变成对社会最大的贡献了。</p>
-<h1 id="生日"><a href="#生日" class="headerlink" title="生日"></a>生日</h1><p>Mia的农历生日是初六，因为疫情没法家庭聚会，就准备紧着家里的几口人给她过生日，其他家人视频连线。</p>
-<p>作为女儿的周岁生日，自然是打算好好给她布置一番，好在是提前买了气球，大年二十九，想着给先布置起来，也给家里增加一点喜气，结果晚上十一点对，一辆救护车的闪光映入眼帘，因为在一楼看的很清楚，后面就听说楼上的一户家里确诊了，当时看到全副武装的医护人员在自家楼栋拖走人的时候，还是心里咯噔了一下，老婆也吓坏了，我们一起把大门口消毒，给她平复了一下心情。</p>
-<p>初六，给宝宝做了蛋糕，做了视频，办了抓周仪式；二月十号，宝宝公历生日，原本以为我们可以在海底捞举办一个生日party，也只能是原班人马，剧情再来一遍。</p>
-<h1 id="战“疫”"><a href="#战“疫”" class="headerlink" title="战“疫”"></a>战“疫”</h1><p>今年过年由于小孩比较小，放弃了回汉南那边，让爸妈过来了，爸年三十才放假，拖了大包小包的菜水果种种过来。</p>
-<p>结果疫情的发展，有点猝不及防，关键是又赶上了中国特色的世界级的人口迁移活动——“春运”，控制的难度可想而知。</p>
-<p>父亲是个老党员，很快就被召集回单位，去支援社区的工作，大年初二，在武汉升级交通管制的头一天，急急忙忙被召唤回去，参与到战“疫”的第一线。很担心，但是我知道这是他必须做的。而我每天负责了解同事们的身体状态，也为内部防控做自己的努力。</p>
-<h1 id="物资"><a href="#物资" class="headerlink" title="物资"></a>物资</h1><p>“封城”之后，各大超市的物资几乎都被洗劫一空，好在是爸大年三十过来带来了大量的物资，足以让我们应对了半个月多，然而这只是我们，也只是温饱问题。</p>
-<p>医疗物资一直是紧缺的，从红十字会的事情，到各大医院纷纷求助，都暴露出医疗物资的极度匮乏，好在是在连云港买了点口罩，回来发现根本买不到。双黄连的乌龙也是增大了交叉感染的机会，恐慌之下，没有多少人是真正能判断是非的，不过谁叫这个新闻是从官媒出来的呢。</p>
-<p>目前各电商，还有超市啥的，民间组织，社区志愿者很多都提供了送货服务，暂时物资不是一个明显的障碍，过得去，当然这也是保障群众心理稳定的最基础。</p>
-<p>现在已经是所有小区封锁了，门口都靠铁栅栏封起来，俨然一副戒严状态。</p>
-<h1 id="谣言"><a href="#谣言" class="headerlink" title="谣言"></a>谣言</h1><p>2020年了，相较于2003年，整整十几年过去了，通讯的发展简直是突飞猛进，目前如火如荼的5G，似乎在这场没有硝烟的战争中更凸显出他的价值。整个战“疫”过程也是一场与谣言的的较量，也许是因为大家太闲了，也许是有些人唯恐天下不乱，各种谣言纷飞，即使是我们这种在互联网环境下培养起来的人，尚且难以分辨，何况是父母一辈的。</p>
-<p>很不错的是几大互联网公司纷纷站了出来，各种辟谣平台出来，官方处理谣言的速度也加快了一节。</p>
-<p>谣言往往是造成恐慌的一个很大的原因，还是要多思考自己判断，判断不了的，就带着怀疑的心态去小心求证吧。</p>
-<h1 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h1><p>现在大家似乎习惯了，每天早上起床，点开各大互联网门户，看看今天又增加了多少，然后关掉，记的世卫组织在说起中国疫情的时候强调，这不是仅仅是数字，而是一个个鲜活的生命。确实，位于疫情风眼武汉的我，听到看到很多的消息，甚至是自己或家人认识的人，许多家人奔赴一线，默默的为他们担忧，回过头来想想，那每一个确诊的病例，他的家人，何尝不是这样担心的呢？</p>
-<p>好在是现在数据公开的算及时，公开性和透明性也提升了许多，值得欣慰，这是国家的进步，社会的进步。</p>
-<h1 id="希望"><a href="#希望" class="headerlink" title="希望"></a>希望</h1><p>最近天气转好，打开窗户亦会吹来让人慵懒的春风，窗外虽是一片萧条，但我相信，希望就在前方，我们相约过早，吃热干面，吃豆皮，我们相约逛武大，看樱花，我们相约大排档，喝点小酒吃烧烤，请大家不要放弃心中的希望！武汉加油！中国加油！</p>
-]]></content>
-      <categories>
-        <category>武汉新冠疫情</category>
-      </categories>
-      <tags>
-        <tag>战疫</tag>
-        <tag>test</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>利用C#和Echarts开发流量占有率对比小工具</title>
-    <url>/2017/07/21/cs-echarts/</url>
-    <content><![CDATA[<blockquote>
-<p><del>网易也把评论关了，不知啥原因，所以有问题的话，大家还是邮件联系吧，目前难找到一个国内的公共留言平台了，桑心！</del> 后来还是找到替代方案了。</p>
-</blockquote>
-<h1 id="事情由来"><a href="#事情由来" class="headerlink" title="事情由来"></a>事情由来</h1><p>最近在研究检测器数据，对数据的研究通常需要有一个直观的认识，但是由于数据量非常大，时间跨度也非常长，之前利用python或者matlab生成的静态图片已经不能满足我的需求，突然在Echarts上看到一个模板如下图，发现还挺适合我的需求的，就想着利用Echarts来展示。</p>
-<a id="more"></a>
-<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/1.png?x-oss-process=style/sy-highq" alt="对比图"></p>
-<h1 id="萌生的思路"><a href="#萌生的思路" class="headerlink" title="萌生的思路"></a>萌生的思路</h1><p>受限于自身水平和数据环境原因，为了做这个小工具，也走了不少弯路，有一些想法也可能很笨拙，将中间遇到的问题进行总结，希望帮助到大家，也希望大家给我更好的建议。（PS:如果大家问我为啥不用JAVA，因为这个我还不会，而且赶时间[捂脸]）</p>
-<h2 id="思路1：利用Python完成"><a href="#思路1：利用Python完成" class="headerlink" title="思路1：利用Python完成"></a>思路1：利用Python完成</h2><p>大致的想法是这样的：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;更新了发现原来hexo默认不能解析流程图，重新加个流程图，这个也留着，当做对应吧</span><br><span class="line">st&#x3D;&gt;start</span><br><span class="line">dj&#x3D;&gt;operation: 利用django构建简单web平台</span><br><span class="line">or&#x3D;&gt;operation: 读取oracle数据库</span><br><span class="line">js&#x3D;&gt;operation: 生成json文件</span><br><span class="line">ec&#x3D;&gt;operation: Echarts读取json文件生成图形</span><br><span class="line">e&#x3D;&gt;end</span><br><span class="line">st(right)-&gt;dj(right)-&gt;or-&gt;js-&gt;ec-&gt;e</span><br></pre></td></tr></table></figure>
-<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/3.png?x-oss-process=style/sy-highq" alt="python流程图"><br>然而这个想法很快就夭折了，因为python链接oracle实在是太坑了，涉及到了很多编码问题和软件位数问题。链接需要一个叫做cx_oracle的包，因为要用plsql（32位），所以之前装了一个32位的oracle客户端，而数据库服务器上装的是64位的oracle，我自己的python版本的3.4 64位，所以就安装了64位的cx_oracle，中间自己编译还遇到了找不到vs10的编译执行文件的问题，通过SET设置环境变量解决了。最终装上了，结果遇上了编码问题，无法导入包。读取数据库是最关键的步骤，这一步解决不了，我只有放弃这个思路了。</p>
-<h2 id="思路2：利用C-完成"><a href="#思路2：利用C-完成" class="headerlink" title="思路2：利用C#完成"></a>思路2：利用C#完成</h2><p>原本使用python是希望可以直接利用里面的包进行分析，然后想想选择一个折中的方式吧，反正都是生成了json文件，pandas可以直接读取，干脆把展示和分析分为两个部分。<br>C#去直连oracle数据库是比较简单的，同时可以嵌入一个浏览器的控件去展示最后生成的页面，因此就产生了下面的想法：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">st&#x3D;&gt;start</span><br><span class="line">c&#x3D;&gt;operation: C# winform</span><br><span class="line">web&#x3D;&gt;operation: 浏览器控件</span><br><span class="line">or&#x3D;&gt;operation: oracle链接查询类</span><br><span class="line">js&#x3D;&gt;operation: json文件</span><br><span class="line">ec&#x3D;&gt;operation: echarts加载</span><br><span class="line">e&#x3D;&gt;end</span><br><span class="line">st(right)-&gt;c</span><br><span class="line">c-&gt;or(right)-&gt;js(right)-&gt;web(right)-&gt;ec(right)-&gt;e</span><br></pre></td></tr></table></figure>
-<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/4.png?x-oss-process=style/sy-highq" alt="c#流程图"><br>为了实现这个想法，主要需要解决以下问题：</p>
-<ol>
-<li>C#链接数据库并执行查询工作<br>这个过程比较简单，网上有大量的方法去解决这个数据库连接与查询的问题，在此就不赘述。</li>
-<li>将查询的文件按照json格式保存<br>由于json格式还是相对比较自由，主要看的两种方式(其他的嵌套方式在这里不考虑)：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#第一种方式</span><br><span class="line">&#123;</span><br><span class="line">&quot;key1&quot;:[value1,value2,...],</span><br><span class="line">&quot;key2&quot;:[value1,value2,...]</span><br><span class="line">&#125;</span><br><span class="line">#第二种方式</span><br><span class="line">&#123;</span><br><span class="line">[&#123;&quot;key1&quot;:value1,&quot;key2&quot;:value1,...&#125;,</span><br><span class="line">&#123;&quot;key1&quot;:value2,&quot;key2&quot;:value2,...&#125;]</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-为了便于从数据库数据中写出数据，这里采用了第一种存储方式，利用C#流写出一个json文件，对json格式拿不准了可以在网上找个格式校验的分析一下生成的格式是否有问题。</li>
-<li>Echarts文件加载本地的json文件<br>在这一步上有若干的问题，我采用浏览器加载本地html文件，而利用echarts的js包加载数据需要JQ的支持，因此在本地的html文件中至少加载两个js文件，一个echarts的，一个JQ的。<br>因为考虑要异步的加载数据，数据是不可能写死在html文件中，因此必须使用JQ。这里出现了几个问题：</li>
-</ol>
-<ul>
-<li>C#默认的浏览器内核是IE的（我这里应该是IE11），需要在html文件中写适配才能够执行js的文件。</li>
-<li>JQ出于安全性考虑，是无法加载本机（Windows）的文件路径的，必须通过服务器返回json文件。如果你在html的js块中写了加载本地文件的语句，利用chrome调试，会提示没有权限加载本地文件。为了解决这个问题，在本机搭了一个IIS服务器，通过localhost返回json文件。此时又出现一个问题，就是JQ跨域加载文件的问题，由于在本机测试，我这里采用了一个不安全的做法，在IIS的配置中设置如下（IE10以下似乎是不支持的）：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">header(&quot;Access-Control-Allow-Origin:*&quot;);</span><br><span class="line">&#x2F;*星号表示所有的域都可以接受，*&#x2F;</span><br><span class="line">header(&quot;Access-Control-Allow-Methods:GET,POST&quot;);</span><br></pre></td></tr></table></figure>
-之后JQ就能加载到本地文件了。<br>到这里大多数的问题都解决了，采用了一个笨拙的方法去解决一个问题，其实有时候也挺有趣的。<br>最后的效果就是这样：<img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/2.png?x-oss-process=style/sy-highq" alt="软件界面"></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Echarts</category>
-      </categories>
-      <tags>
-        <tag>小软件</tag>
-        <tag>C#</tag>
-        <tag>echarts</tag>
       </tags>
   </entry>
   <entry>
@@ -360,6 +285,81 @@
       </categories>
       <tags>
         <tag>信号调优</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>一个疫情笼罩下的春节</title>
+    <url>/2020/04/01/covid2019/</url>
+    <content><![CDATA[<p>一个特殊的春节，在瘟疫的笼罩下，所有的人都人心惶惶，大家每天看着不断增加的数字，仿佛成为了大家的习惯。</p>
+<h1 id="初识"><a href="#初识" class="headerlink" title="初识"></a>初识</h1><p>记得还是元旦之前，出差去上海，老婆突然急急忙忙给我发了消息问我从哪个火车站走的，说是可能有类似于SARS的病又来了，当然很快官方有了声明，未发现人传人的迹象，自然我也信了，毕竟是官方公告。</p>
+<p>接下来得一段时间，就一直出差，基本都没捞着回家，最后一站在连云港，公司开完年会，结束了一年的工作分公司的小伙伴准备一起回家，而那几天风声已经愈发的紧了，记得回武汉的那天早上，去杰瑞宾馆对面的药店买口罩，药店的阿姨还很奇怪为何我买好几包。</p>
+<p>回到武汉，最后两天班，正是钟南山院士宣布病毒会人传人的时候，明显感觉到大家开始慌了，地铁里戴口罩的人明显多了很多。</p>
+<p>接着我们放假了，武汉成为了众矢之的，成了“过街老鼠”，接着就如现在一样武汉“封城”了。</p>
+<a id="more"></a>
+
+<h1 id="封城"><a href="#封城" class="headerlink" title="封城"></a>封城</h1><p>我不喜欢这个词，却又很形象，我却是从来也没想象过，在有生之年居然能遇到电影里的场景，一个千万级人口城市，宣布严控进出，体育场和展览馆变成放舱医院。</p>
+<p>不少外地的好友给我消息，关心状况，希望想办法能帮助到我，说真的，挺感动的。</p>
+<p>好了，在家宅着也变成对社会最大的贡献了。</p>
+<h1 id="生日"><a href="#生日" class="headerlink" title="生日"></a>生日</h1><p>Mia的农历生日是初六，因为疫情没法家庭聚会，就准备紧着家里的几口人给她过生日，其他家人视频连线。</p>
+<p>作为女儿的周岁生日，自然是打算好好给她布置一番，好在是提前买了气球，大年二十九，想着给先布置起来，也给家里增加一点喜气，结果晚上十一点对，一辆救护车的闪光映入眼帘，因为在一楼看的很清楚，后面就听说楼上的一户家里确诊了，当时看到全副武装的医护人员在自家楼栋拖走人的时候，还是心里咯噔了一下，老婆也吓坏了，我们一起把大门口消毒，给她平复了一下心情。</p>
+<p>初六，给宝宝做了蛋糕，做了视频，办了抓周仪式；二月十号，宝宝公历生日，原本以为我们可以在海底捞举办一个生日party，也只能是原班人马，剧情再来一遍。</p>
+<h1 id="战“疫”"><a href="#战“疫”" class="headerlink" title="战“疫”"></a>战“疫”</h1><p>今年过年由于小孩比较小，放弃了回汉南那边，让爸妈过来了，爸年三十才放假，拖了大包小包的菜水果种种过来。</p>
+<p>结果疫情的发展，有点猝不及防，关键是又赶上了中国特色的世界级的人口迁移活动——“春运”，控制的难度可想而知。</p>
+<p>父亲是个老党员，很快就被召集回单位，去支援社区的工作，大年初二，在武汉升级交通管制的头一天，急急忙忙被召唤回去，参与到战“疫”的第一线。很担心，但是我知道这是他必须做的。而我每天负责了解同事们的身体状态，也为内部防控做自己的努力。</p>
+<h1 id="物资"><a href="#物资" class="headerlink" title="物资"></a>物资</h1><p>“封城”之后，各大超市的物资几乎都被洗劫一空，好在是爸大年三十过来带来了大量的物资，足以让我们应对了半个月多，然而这只是我们，也只是温饱问题。</p>
+<p>医疗物资一直是紧缺的，从红十字会的事情，到各大医院纷纷求助，都暴露出医疗物资的极度匮乏，好在是在连云港买了点口罩，回来发现根本买不到。双黄连的乌龙也是增大了交叉感染的机会，恐慌之下，没有多少人是真正能判断是非的，不过谁叫这个新闻是从官媒出来的呢。</p>
+<p>目前各电商，还有超市啥的，民间组织，社区志愿者很多都提供了送货服务，暂时物资不是一个明显的障碍，过得去，当然这也是保障群众心理稳定的最基础。</p>
+<p>现在已经是所有小区封锁了，门口都靠铁栅栏封起来，俨然一副戒严状态。</p>
+<h1 id="谣言"><a href="#谣言" class="headerlink" title="谣言"></a>谣言</h1><p>2020年了，相较于2003年，整整十几年过去了，通讯的发展简直是突飞猛进，目前如火如荼的5G，似乎在这场没有硝烟的战争中更凸显出他的价值。整个战“疫”过程也是一场与谣言的的较量，也许是因为大家太闲了，也许是有些人唯恐天下不乱，各种谣言纷飞，即使是我们这种在互联网环境下培养起来的人，尚且难以分辨，何况是父母一辈的。</p>
+<p>很不错的是几大互联网公司纷纷站了出来，各种辟谣平台出来，官方处理谣言的速度也加快了一节。</p>
+<p>谣言往往是造成恐慌的一个很大的原因，还是要多思考自己判断，判断不了的，就带着怀疑的心态去小心求证吧。</p>
+<h1 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h1><p>现在大家似乎习惯了，每天早上起床，点开各大互联网门户，看看今天又增加了多少，然后关掉，记的世卫组织在说起中国疫情的时候强调，这不是仅仅是数字，而是一个个鲜活的生命。确实，位于疫情风眼武汉的我，听到看到很多的消息，甚至是自己或家人认识的人，许多家人奔赴一线，默默的为他们担忧，回过头来想想，那每一个确诊的病例，他的家人，何尝不是这样担心的呢？</p>
+<p>好在是现在数据公开的算及时，公开性和透明性也提升了许多，值得欣慰，这是国家的进步，社会的进步。</p>
+<h1 id="希望"><a href="#希望" class="headerlink" title="希望"></a>希望</h1><p>最近天气转好，打开窗户亦会吹来让人慵懒的春风，窗外虽是一片萧条，但我相信，希望就在前方，我们相约过早，吃热干面，吃豆皮，我们相约逛武大，看樱花，我们相约大排档，喝点小酒吃烧烤，请大家不要放弃心中的希望！武汉加油！中国加油！</p>
+]]></content>
+      <categories>
+        <category>武汉新冠疫情</category>
+      </categories>
+      <tags>
+        <tag>战疫</tag>
+        <tag>test</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>利用C#和Echarts开发流量占有率对比小工具</title>
+    <url>/2017/07/21/cs-echarts/</url>
+    <content><![CDATA[<blockquote>
+<p><del>网易也把评论关了，不知啥原因，所以有问题的话，大家还是邮件联系吧，目前难找到一个国内的公共留言平台了，桑心！</del> 后来还是找到替代方案了。</p>
+</blockquote>
+<h1 id="事情由来"><a href="#事情由来" class="headerlink" title="事情由来"></a>事情由来</h1><p>最近在研究检测器数据，对数据的研究通常需要有一个直观的认识，但是由于数据量非常大，时间跨度也非常长，之前利用python或者matlab生成的静态图片已经不能满足我的需求，突然在Echarts上看到一个模板如下图，发现还挺适合我的需求的，就想着利用Echarts来展示。</p>
+<a id="more"></a>
+<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/1.png?x-oss-process=style/sy-highq" alt="对比图"></p>
+<h1 id="萌生的思路"><a href="#萌生的思路" class="headerlink" title="萌生的思路"></a>萌生的思路</h1><p>受限于自身水平和数据环境原因，为了做这个小工具，也走了不少弯路，有一些想法也可能很笨拙，将中间遇到的问题进行总结，希望帮助到大家，也希望大家给我更好的建议。（PS:如果大家问我为啥不用JAVA，因为这个我还不会，而且赶时间[捂脸]）</p>
+<h2 id="思路1：利用Python完成"><a href="#思路1：利用Python完成" class="headerlink" title="思路1：利用Python完成"></a>思路1：利用Python完成</h2><p>大致的想法是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;更新了发现原来hexo默认不能解析流程图，重新加个流程图，这个也留着，当做对应吧</span><br><span class="line">st&#x3D;&gt;start</span><br><span class="line">dj&#x3D;&gt;operation: 利用django构建简单web平台</span><br><span class="line">or&#x3D;&gt;operation: 读取oracle数据库</span><br><span class="line">js&#x3D;&gt;operation: 生成json文件</span><br><span class="line">ec&#x3D;&gt;operation: Echarts读取json文件生成图形</span><br><span class="line">e&#x3D;&gt;end</span><br><span class="line">st(right)-&gt;dj(right)-&gt;or-&gt;js-&gt;ec-&gt;e</span><br></pre></td></tr></table></figure>
+<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/3.png?x-oss-process=style/sy-highq" alt="python流程图"><br>然而这个想法很快就夭折了，因为python链接oracle实在是太坑了，涉及到了很多编码问题和软件位数问题。链接需要一个叫做cx_oracle的包，因为要用plsql（32位），所以之前装了一个32位的oracle客户端，而数据库服务器上装的是64位的oracle，我自己的python版本的3.4 64位，所以就安装了64位的cx_oracle，中间自己编译还遇到了找不到vs10的编译执行文件的问题，通过SET设置环境变量解决了。最终装上了，结果遇上了编码问题，无法导入包。读取数据库是最关键的步骤，这一步解决不了，我只有放弃这个思路了。</p>
+<h2 id="思路2：利用C-完成"><a href="#思路2：利用C-完成" class="headerlink" title="思路2：利用C#完成"></a>思路2：利用C#完成</h2><p>原本使用python是希望可以直接利用里面的包进行分析，然后想想选择一个折中的方式吧，反正都是生成了json文件，pandas可以直接读取，干脆把展示和分析分为两个部分。<br>C#去直连oracle数据库是比较简单的，同时可以嵌入一个浏览器的控件去展示最后生成的页面，因此就产生了下面的想法：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">st&#x3D;&gt;start</span><br><span class="line">c&#x3D;&gt;operation: C# winform</span><br><span class="line">web&#x3D;&gt;operation: 浏览器控件</span><br><span class="line">or&#x3D;&gt;operation: oracle链接查询类</span><br><span class="line">js&#x3D;&gt;operation: json文件</span><br><span class="line">ec&#x3D;&gt;operation: echarts加载</span><br><span class="line">e&#x3D;&gt;end</span><br><span class="line">st(right)-&gt;c</span><br><span class="line">c-&gt;or(right)-&gt;js(right)-&gt;web(right)-&gt;ec(right)-&gt;e</span><br></pre></td></tr></table></figure>
+<p><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/4.png?x-oss-process=style/sy-highq" alt="c#流程图"><br>为了实现这个想法，主要需要解决以下问题：</p>
+<ol>
+<li>C#链接数据库并执行查询工作<br>这个过程比较简单，网上有大量的方法去解决这个数据库连接与查询的问题，在此就不赘述。</li>
+<li>将查询的文件按照json格式保存<br>由于json格式还是相对比较自由，主要看的两种方式(其他的嵌套方式在这里不考虑)：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#第一种方式</span><br><span class="line">&#123;</span><br><span class="line">&quot;key1&quot;:[value1,value2,...],</span><br><span class="line">&quot;key2&quot;:[value1,value2,...]</span><br><span class="line">&#125;</span><br><span class="line">#第二种方式</span><br><span class="line">&#123;</span><br><span class="line">[&#123;&quot;key1&quot;:value1,&quot;key2&quot;:value1,...&#125;,</span><br><span class="line">&#123;&quot;key1&quot;:value2,&quot;key2&quot;:value2,...&#125;]</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+为了便于从数据库数据中写出数据，这里采用了第一种存储方式，利用C#流写出一个json文件，对json格式拿不准了可以在网上找个格式校验的分析一下生成的格式是否有问题。</li>
+<li>Echarts文件加载本地的json文件<br>在这一步上有若干的问题，我采用浏览器加载本地html文件，而利用echarts的js包加载数据需要JQ的支持，因此在本地的html文件中至少加载两个js文件，一个echarts的，一个JQ的。<br>因为考虑要异步的加载数据，数据是不可能写死在html文件中，因此必须使用JQ。这里出现了几个问题：</li>
+</ol>
+<ul>
+<li>C#默认的浏览器内核是IE的（我这里应该是IE11），需要在html文件中写适配才能够执行js的文件。</li>
+<li>JQ出于安全性考虑，是无法加载本机（Windows）的文件路径的，必须通过服务器返回json文件。如果你在html的js块中写了加载本地文件的语句，利用chrome调试，会提示没有权限加载本地文件。为了解决这个问题，在本机搭了一个IIS服务器，通过localhost返回json文件。此时又出现一个问题，就是JQ跨域加载文件的问题，由于在本机测试，我这里采用了一个不安全的做法，在IIS的配置中设置如下（IE10以下似乎是不支持的）：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">header(&quot;Access-Control-Allow-Origin:*&quot;);</span><br><span class="line">&#x2F;*星号表示所有的域都可以接受，*&#x2F;</span><br><span class="line">header(&quot;Access-Control-Allow-Methods:GET,POST&quot;);</span><br></pre></td></tr></table></figure>
+之后JQ就能加载到本地文件了。<br>到这里大多数的问题都解决了，采用了一个笨拙的方法去解决一个问题，其实有时候也挺有趣的。<br>最后的效果就是这样：<img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/c%23echarts/2.png?x-oss-process=style/sy-highq" alt="软件界面"></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Echarts</category>
+      </categories>
+      <tags>
+        <tag>小软件</tag>
+        <tag>C#</tag>
+        <tag>echarts</tag>
       </tags>
   </entry>
   <entry>
@@ -944,6 +944,34 @@
       </tags>
   </entry>
   <entry>
+    <title>c++ 编译dll 调用vissim</title>
+    <url>/2016/08/25/vissim/</url>
+    <content><![CDATA[<h1 id="C-简单的dll编译提供C-调用"><a href="#C-简单的dll编译提供C-调用" class="headerlink" title="C++ 简单的dll编译提供C#调用#"></a>C++ 简单的dll编译提供C#调用#</h1><blockquote>
+<p>非托管DLL：非.NET环境下编译而成的dll，无法通过添加引用的方式加入程序<br>托管DLL：在.NET环境下编译成的dll</p>
+</blockquote>
+<ul>
+<li>会出现的问题<br>编译方面，注意函数名一定要前要加<code> extern &quot;C&quot;</code>，否则导出的dll函数名会有乱码符号导致调用时找不到函数入口</li>
+</ul>
+<a id="more"></a>
+
+<h2 id="基本示例"><a href="#基本示例" class="headerlink" title="基本示例"></a>基本示例</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">\\vissim.h</span><br><span class="line">\\这是一个利用dll接入VISSIM的dll程序，包含了类，编写了几个函数接口来调用类</span><br><span class="line">#ifdef VISSIMDLL_EXPORTS</span><br><span class="line">#define VISSIMDLL_API extern &quot;C&quot; __declspec(dllexport)</span><br><span class="line">#else</span><br><span class="line">#define VISSIMDLL_API __declspec(dllimport)</span><br><span class="line">#endif</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F;引入VISSIM的COM接口</span><br><span class="line">#import &quot;C:\Program Files (x86)\PTV_Vision\VISSIM430\Exe\vissim.exe&quot;</span><br><span class="line">using namespace VISSIM_COMSERVERLib;</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F; 此类是从 vissimdll.dll 导出的</span><br><span class="line">class Cvissimdll &#123;</span><br><span class="line">private:</span><br><span class="line">    ISimulationPtr _simulatiom;</span><br><span class="line">    IVissimPtr _vissim;</span><br><span class="line">public:</span><br><span class="line">    Cvissimdll(void);</span><br><span class="line">    ~Cvissimdll(void);</span><br><span class="line">    void VissimInit();</span><br><span class="line">    void VissimLoadNet(char*);</span><br><span class="line">    void VissimRun();</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line">VISSIMDLL_API void* VisClassInit(void **clsp);</span><br><span class="line"> </span><br><span class="line">VISSIMDLL_API void OpenVissim(Cvissimdll *p);</span><br><span class="line"> </span><br><span class="line">VISSIMDLL_API void LoadVissimNet(Cvissimdll *p,char* path);</span><br><span class="line"> </span><br><span class="line">VISSIMDLL_API void ProRun(Cvissimdll *p);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;vissimdll.cpp</span><br><span class="line">#include &quot;stdafx.h&quot;</span><br><span class="line">#include &quot;vissimdll.h&quot;</span><br><span class="line"> </span><br><span class="line">Cvissimdll::Cvissimdll()</span><br><span class="line">&#123;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">Cvissimdll::~Cvissimdll()</span><br><span class="line">&#123;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void Cvissimdll::VissimInit()</span><br><span class="line">&#123;       </span><br><span class="line">    CoInitialize(NULL);</span><br><span class="line">    _vissim.CreateInstance(&quot;Vissim.vissim&quot;);</span><br><span class="line">    MessageBox(NULL,&quot;调用vissim成功！&quot;,&quot;调用提示&quot;,MB_OK);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void Cvissimdll::VissimLoadNet(char* path)</span><br><span class="line">&#123;</span><br><span class="line">    _vissim-&gt;LoadNet(path,false);</span><br><span class="line">    MessageBox(NULL,&quot;路网加载成功,运行仿真？&quot;,&quot;调用提示&quot;,MB_OKCANCEL);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void Cvissimdll::VissimRun()</span><br><span class="line">&#123;</span><br><span class="line">    _vissim-&gt;Simulation-&gt;RunContinuous();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void* VisClassInit(void **clsp)</span><br><span class="line">&#123;</span><br><span class="line">    Cvissimdll* p &#x3D; new Cvissimdll();</span><br><span class="line">    *clsp &#x3D; p;</span><br><span class="line">    return clsp;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void OpenVissim(Cvissimdll *p)</span><br><span class="line">&#123;</span><br><span class="line">    p-&gt;VissimInit();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void LoadVissimNet(Cvissimdll *p,char* path)</span><br><span class="line">&#123;</span><br><span class="line">    p-&gt;VissimLoadNet(path);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void ProRun(Cvissimdll *p)</span><br><span class="line">&#123;</span><br><span class="line">    p-&gt;VissimRun();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="C-的简单调用"><a href="#C-的简单调用" class="headerlink" title="C#的简单调用#"></a>C#的简单调用#</h1><p>非托管dll的引用，在没有进行CLR的类封装编程时，只能调用dll中的函数，因此可以采用提供接口函数的方式来实现类的相关功能，如上面示例。采用的基本方法是P/invoke的方法调用。<br>首先需要添加引用<code>using System.Runtime.InteropServices;</code></p>
+<h2 id="基本的调用方法参数"><a href="#基本的调用方法参数" class="headerlink" title="基本的调用方法参数"></a>基本的调用方法参数</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[AttributeUsage(AttributeTargets.Method)]</span><br><span class="line">public class DllImportAttribute: System.Attribute</span><br><span class="line">&#123;</span><br><span class="line">public DllImportAttribute(string dllName) &#123;…&#125; &#x2F;&#x2F;定位参数为dllName</span><br><span class="line">public CallingConvention CallingConvention; &#x2F;&#x2F;入口点调用约定</span><br><span class="line">public CharSet CharSet;                                   &#x2F;&#x2F;入口点采用的字符接</span><br><span class="line">public string EntryPoint;  &#x2F;&#x2F;入口点名称</span><br><span class="line">public bool ExactSpelling;   &#x2F;&#x2F;是否必须与指示的入口点拼写完全一致，默认false</span><br><span class="line">public bool PreserveSig;  &#x2F;&#x2F;方法的签名是被保留还是被转换</span><br><span class="line">public bool SetLastError;  &#x2F;&#x2F;FindLastError方法的返回值保存在这里</span><br><span class="line">public string Value &#123; get &#123;…&#125; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="调用示例"><a href="#调用示例" class="headerlink" title="调用示例"></a>调用示例</h2><p>使用上面C++编译的dll来实现VISSIM的调用</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">namespace vissimconn</span><br><span class="line">&#123;</span><br><span class="line">    public partial class Form1 : Form</span><br><span class="line">    &#123;</span><br><span class="line">        [DllImport(@&quot;E:\code\C++\vissimdll\Debug\vissimdll.dll&quot;, EntryPoint &#x3D; &quot;VisClassInit&quot;, CallingConvention &#x3D; CallingConvention.Cdecl)]</span><br><span class="line">        extern static int VisClassinit(ref int clapoint);</span><br><span class="line">        [DllImport(@&quot;E:\code\C++\vissimdll\Debug\vissimdll.dll&quot;, EntryPoint &#x3D; &quot;OpenVissim&quot;, CallingConvention &#x3D; CallingConvention.Cdecl)]</span><br><span class="line">        extern static void Openvissim(ref int clapoint);</span><br><span class="line">        [DllImport(@&quot;E:\code\C++\vissimdll\Debug\vissimdll.dll&quot;, EntryPoint &#x3D; &quot;LoadVissimNet&quot;, CallingConvention &#x3D; CallingConvention.Cdecl)]</span><br><span class="line">        extern static void LoadNet(ref int clapoint, string path);</span><br><span class="line">        [DllImport(@&quot;E:\code\C++\vissimdll\Debug\vissimdll.dll&quot;, EntryPoint &#x3D; &quot;ProRun&quot;, CallingConvention &#x3D; CallingConvention.Cdecl)]</span><br><span class="line">        extern static void Run(ref int clapoint);</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">        private int _clspoint &#x3D; 0;</span><br><span class="line">        private string path &#x3D; @&quot;C:\Users\jr-zsf\Desktop\黄山4.3\vissim.inp&quot;;</span><br><span class="line">        public Form1()</span><br><span class="line">        &#123;</span><br><span class="line">            InitializeComponent();</span><br><span class="line">            _clspoint &#x3D; VisClassinit(ref _clspoint);</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        private void button1_Click(object sender, EventArgs e)</span><br><span class="line">        &#123;</span><br><span class="line">            Openvissim(ref _clspoint);</span><br><span class="line">            label1.Text &#x3D; &quot;接口函数加载成功！&quot;;</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        private void button2_Click(object sender, EventArgs e)</span><br><span class="line">        &#123;</span><br><span class="line">            LoadNet(ref _clspoint, path);</span><br><span class="line">            Run(ref _clspoint);</span><br><span class="line">            label2.Text &#x3D; &quot;路网加载成功！&quot;;</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后补三张图<br>![启动VISSIM][1]<br>![加载路网][2]<br>![启动仿真][3]<br>[1]:<a href="http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/1.PNG?x-oss-process=style/sy-highq">http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/1.PNG?x-oss-process=style/sy-highq</a><br>[2]:<a href="http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/2.PNG?x-oss-process=style/sy-highq">http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/2.PNG?x-oss-process=style/sy-highq</a><br>[3]:<a href="http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/3.PNG?x-oss-process=style/sy-highq">http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/3.PNG?x-oss-process=style/sy-highq</a></p>
+]]></content>
+      <categories>
+        <category>Vissim</category>
+      </categories>
+      <tags>
+        <tag>vissim</tag>
+        <tag>教程</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Vissim COM接口教程--VISSIM的调用（一）</title>
     <url>/2015/10/21/vissimcom1/</url>
     <content><![CDATA[<p>想了很久感觉需要将这一块写成教程，方便更多需要使用VISSIM二次开发的同学入门和交流，主要会介绍如何用其他的环境调用VISSIM，如何从VISSIM中取出数据，以及如何写入数据，我会尽量讲的详细些，但不会涉及编程语言的教学，本教程中的软件环境为VS2013+VISSIM7.0。<br>PS:VISSIM7.0的版本中，COM接口函数基本重写了，因此若使用5.4版本和4.3版本的同学需要按照使用版本的手册去查询相关的对象和函数关系。(更新后将采用VISSIM5.4+VS2013环境，本篇将补充其引用方式)<br>本人交通出生，并不是计算机专业，若代码写的较烂，或是有什么错误的地方，希望大家批评指正，万分感谢！</p>
@@ -1018,34 +1046,6 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">listView1.Columns.Add(&quot;TTid&quot;);</span><br><span class="line">listView1.Columns.Add(&quot;TT&quot;);</span><br><span class="line">listView1.Columns.Add(&quot;NV&quot;);</span><br><span class="line">for(int i&#x3D;1;i&lt;&#x3D;42000;i++)</span><br><span class="line">&#123;</span><br><span class="line">    Application.DoEvents();</span><br><span class="line">    vissim.Simulation.RunSingleStep();</span><br><span class="line">    if(i&gt;6000 &amp;&amp; i%600&#x3D;&#x3D;0)</span><br><span class="line">    &#123;</span><br><span class="line">        foreach(TravelTime TT in vissim.Net.TravelTimes)</span><br><span class="line">		&#123;</span><br><span class="line">			&#x2F;&#x2F;TravelTime TT &#x3D; vissim.Net.TravelTimes.GetTravelTimeByNumber(1);</span><br><span class="line">			ListViewItem temp &#x3D; new ListViewItem();</span><br><span class="line">			temp.Text &#x3D; TT.ID.ToString();</span><br><span class="line">			temp.SubItems.Add(TT.GetResult((double)i &#x2F; 10, &quot;TRAVELTIME&quot;, &quot;&quot;, 0).ToString());</span><br><span class="line">			temp.SubItems.Add(TT.GetResult((double)i &#x2F; 10, &quot;NVEHICLES&quot;, &quot;&quot;, 0).ToString());</span><br><span class="line">			listView1.Items.Add(temp);</span><br><span class="line">			listView1.Items[listView1.Items.Count - 1].EnsureVisible();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>测试结果：<br><img src="http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMNEW/traveltime.png?x-oss-process=style/sy-highq" alt="traveltime"></p>
 <p>小结：<br>VISSIM对象中的数据读取都大同小异，首先需要对VISSIM熟悉，才能更好的使用COM接口，在需要使用特点的函数时，对应手册进行查询。</p>
-]]></content>
-      <categories>
-        <category>Vissim</category>
-      </categories>
-      <tags>
-        <tag>vissim</tag>
-        <tag>教程</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>c++ 编译dll 调用vissim</title>
-    <url>/2016/08/25/vissim/</url>
-    <content><![CDATA[<h1 id="C-简单的dll编译提供C-调用"><a href="#C-简单的dll编译提供C-调用" class="headerlink" title="C++ 简单的dll编译提供C#调用#"></a>C++ 简单的dll编译提供C#调用#</h1><blockquote>
-<p>非托管DLL：非.NET环境下编译而成的dll，无法通过添加引用的方式加入程序<br>托管DLL：在.NET环境下编译成的dll</p>
-</blockquote>
-<ul>
-<li>会出现的问题<br>编译方面，注意函数名一定要前要加<code> extern &quot;C&quot;</code>，否则导出的dll函数名会有乱码符号导致调用时找不到函数入口</li>
-</ul>
-<a id="more"></a>
-
-<h2 id="基本示例"><a href="#基本示例" class="headerlink" title="基本示例"></a>基本示例</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">\\vissim.h</span><br><span class="line">\\这是一个利用dll接入VISSIM的dll程序，包含了类，编写了几个函数接口来调用类</span><br><span class="line">#ifdef VISSIMDLL_EXPORTS</span><br><span class="line">#define VISSIMDLL_API extern &quot;C&quot; __declspec(dllexport)</span><br><span class="line">#else</span><br><span class="line">#define VISSIMDLL_API __declspec(dllimport)</span><br><span class="line">#endif</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F;引入VISSIM的COM接口</span><br><span class="line">#import &quot;C:\Program Files (x86)\PTV_Vision\VISSIM430\Exe\vissim.exe&quot;</span><br><span class="line">using namespace VISSIM_COMSERVERLib;</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F; 此类是从 vissimdll.dll 导出的</span><br><span class="line">class Cvissimdll &#123;</span><br><span class="line">private:</span><br><span class="line">    ISimulationPtr _simulatiom;</span><br><span class="line">    IVissimPtr _vissim;</span><br><span class="line">public:</span><br><span class="line">    Cvissimdll(void);</span><br><span class="line">    ~Cvissimdll(void);</span><br><span class="line">    void VissimInit();</span><br><span class="line">    void VissimLoadNet(char*);</span><br><span class="line">    void VissimRun();</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line">VISSIMDLL_API void* VisClassInit(void **clsp);</span><br><span class="line"> </span><br><span class="line">VISSIMDLL_API void OpenVissim(Cvissimdll *p);</span><br><span class="line"> </span><br><span class="line">VISSIMDLL_API void LoadVissimNet(Cvissimdll *p,char* path);</span><br><span class="line"> </span><br><span class="line">VISSIMDLL_API void ProRun(Cvissimdll *p);</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;vissimdll.cpp</span><br><span class="line">#include &quot;stdafx.h&quot;</span><br><span class="line">#include &quot;vissimdll.h&quot;</span><br><span class="line"> </span><br><span class="line">Cvissimdll::Cvissimdll()</span><br><span class="line">&#123;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">Cvissimdll::~Cvissimdll()</span><br><span class="line">&#123;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void Cvissimdll::VissimInit()</span><br><span class="line">&#123;       </span><br><span class="line">    CoInitialize(NULL);</span><br><span class="line">    _vissim.CreateInstance(&quot;Vissim.vissim&quot;);</span><br><span class="line">    MessageBox(NULL,&quot;调用vissim成功！&quot;,&quot;调用提示&quot;,MB_OK);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void Cvissimdll::VissimLoadNet(char* path)</span><br><span class="line">&#123;</span><br><span class="line">    _vissim-&gt;LoadNet(path,false);</span><br><span class="line">    MessageBox(NULL,&quot;路网加载成功,运行仿真？&quot;,&quot;调用提示&quot;,MB_OKCANCEL);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void Cvissimdll::VissimRun()</span><br><span class="line">&#123;</span><br><span class="line">    _vissim-&gt;Simulation-&gt;RunContinuous();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void* VisClassInit(void **clsp)</span><br><span class="line">&#123;</span><br><span class="line">    Cvissimdll* p &#x3D; new Cvissimdll();</span><br><span class="line">    *clsp &#x3D; p;</span><br><span class="line">    return clsp;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void OpenVissim(Cvissimdll *p)</span><br><span class="line">&#123;</span><br><span class="line">    p-&gt;VissimInit();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void LoadVissimNet(Cvissimdll *p,char* path)</span><br><span class="line">&#123;</span><br><span class="line">    p-&gt;VissimLoadNet(path);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void ProRun(Cvissimdll *p)</span><br><span class="line">&#123;</span><br><span class="line">    p-&gt;VissimRun();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="C-的简单调用"><a href="#C-的简单调用" class="headerlink" title="C#的简单调用#"></a>C#的简单调用#</h1><p>非托管dll的引用，在没有进行CLR的类封装编程时，只能调用dll中的函数，因此可以采用提供接口函数的方式来实现类的相关功能，如上面示例。采用的基本方法是P/invoke的方法调用。<br>首先需要添加引用<code>using System.Runtime.InteropServices;</code></p>
-<h2 id="基本的调用方法参数"><a href="#基本的调用方法参数" class="headerlink" title="基本的调用方法参数"></a>基本的调用方法参数</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[AttributeUsage(AttributeTargets.Method)]</span><br><span class="line">public class DllImportAttribute: System.Attribute</span><br><span class="line">&#123;</span><br><span class="line">public DllImportAttribute(string dllName) &#123;…&#125; &#x2F;&#x2F;定位参数为dllName</span><br><span class="line">public CallingConvention CallingConvention; &#x2F;&#x2F;入口点调用约定</span><br><span class="line">public CharSet CharSet;                                   &#x2F;&#x2F;入口点采用的字符接</span><br><span class="line">public string EntryPoint;  &#x2F;&#x2F;入口点名称</span><br><span class="line">public bool ExactSpelling;   &#x2F;&#x2F;是否必须与指示的入口点拼写完全一致，默认false</span><br><span class="line">public bool PreserveSig;  &#x2F;&#x2F;方法的签名是被保留还是被转换</span><br><span class="line">public bool SetLastError;  &#x2F;&#x2F;FindLastError方法的返回值保存在这里</span><br><span class="line">public string Value &#123; get &#123;…&#125; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="调用示例"><a href="#调用示例" class="headerlink" title="调用示例"></a>调用示例</h2><p>使用上面C++编译的dll来实现VISSIM的调用</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">namespace vissimconn</span><br><span class="line">&#123;</span><br><span class="line">    public partial class Form1 : Form</span><br><span class="line">    &#123;</span><br><span class="line">        [DllImport(@&quot;E:\code\C++\vissimdll\Debug\vissimdll.dll&quot;, EntryPoint &#x3D; &quot;VisClassInit&quot;, CallingConvention &#x3D; CallingConvention.Cdecl)]</span><br><span class="line">        extern static int VisClassinit(ref int clapoint);</span><br><span class="line">        [DllImport(@&quot;E:\code\C++\vissimdll\Debug\vissimdll.dll&quot;, EntryPoint &#x3D; &quot;OpenVissim&quot;, CallingConvention &#x3D; CallingConvention.Cdecl)]</span><br><span class="line">        extern static void Openvissim(ref int clapoint);</span><br><span class="line">        [DllImport(@&quot;E:\code\C++\vissimdll\Debug\vissimdll.dll&quot;, EntryPoint &#x3D; &quot;LoadVissimNet&quot;, CallingConvention &#x3D; CallingConvention.Cdecl)]</span><br><span class="line">        extern static void LoadNet(ref int clapoint, string path);</span><br><span class="line">        [DllImport(@&quot;E:\code\C++\vissimdll\Debug\vissimdll.dll&quot;, EntryPoint &#x3D; &quot;ProRun&quot;, CallingConvention &#x3D; CallingConvention.Cdecl)]</span><br><span class="line">        extern static void Run(ref int clapoint);</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">        private int _clspoint &#x3D; 0;</span><br><span class="line">        private string path &#x3D; @&quot;C:\Users\jr-zsf\Desktop\黄山4.3\vissim.inp&quot;;</span><br><span class="line">        public Form1()</span><br><span class="line">        &#123;</span><br><span class="line">            InitializeComponent();</span><br><span class="line">            _clspoint &#x3D; VisClassinit(ref _clspoint);</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        private void button1_Click(object sender, EventArgs e)</span><br><span class="line">        &#123;</span><br><span class="line">            Openvissim(ref _clspoint);</span><br><span class="line">            label1.Text &#x3D; &quot;接口函数加载成功！&quot;;</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        private void button2_Click(object sender, EventArgs e)</span><br><span class="line">        &#123;</span><br><span class="line">            LoadNet(ref _clspoint, path);</span><br><span class="line">            Run(ref _clspoint);</span><br><span class="line">            label2.Text &#x3D; &quot;路网加载成功！&quot;;</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>最后补三张图<br>![启动VISSIM][1]<br>![加载路网][2]<br>![启动仿真][3]<br>[1]:<a href="http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/1.PNG?x-oss-process=style/sy-highq">http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/1.PNG?x-oss-process=style/sy-highq</a><br>[2]:<a href="http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/2.PNG?x-oss-process=style/sy-highq">http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/2.PNG?x-oss-process=style/sy-highq</a><br>[3]:<a href="http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/3.PNG?x-oss-process=style/sy-highq">http://flypigblog.oss-cn-beijing.aliyuncs.com/VISSIMC/3.PNG?x-oss-process=style/sy-highq</a></p>
 ]]></content>
       <categories>
         <category>Vissim</category>
