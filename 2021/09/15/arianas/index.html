@@ -20,19 +20,30 @@
     var CONFIG = {"hostname":"flypig.cc","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="毕业于同济大学交通学院的小硕一枚，主要研究方向为智能交通，信号控制。在李克平教授课题组学习，师从唐克双教授。具体研究问题包括绿闪时期驾驶员行为分析1,2以及城市主干路控制与诱导耦合算法。主攻交通工程相关专业，对交通规划、交通组织优化、道路路基路面、道路建筑材料等有一定了解，对信号控制、智能交通有较深入的研究，在读研期间，完成过智能交通整体架构方案，对整个框架有一定了解。工作后，跑了国内外大几十个城">
-<meta property="og:type" content="website">
-<meta property="og:title" content="我是谁？">
-<meta property="og:url" content="http://flypig.cc/about/index.html">
+  <meta name="description" content="前段时间没事又忍不住买了个pacificrack的廉价VPS，2核+2G+60G 一年才13刀，实在没忍住，就下手了。之前的VPS，已经做了梯子，这个在做一个倒是无妨，最新的攻略参看【小白福利】2021最新V2Ray搭建图文教程，V2Ray一键搭建脚本！，真的是特别小白，开箱即用。 那么问题来了，可是这个还可以用来做什么呢，之前折腾过一点离线下载，就搭一个吧。主要的思路是，利用Aria2进行离线下">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Aria2+AriaNG+Rclone+OneDrive+Zfile+黑裙离线下载折腾记">
+<meta property="og:url" content="http://flypig.cc/2021/09/15/arianas/index.html">
 <meta property="og:site_name" content="Life of Flypig">
-<meta property="og:description" content="毕业于同济大学交通学院的小硕一枚，主要研究方向为智能交通，信号控制。在李克平教授课题组学习，师从唐克双教授。具体研究问题包括绿闪时期驾驶员行为分析1,2以及城市主干路控制与诱导耦合算法。主攻交通工程相关专业，对交通规划、交通组织优化、道路路基路面、道路建筑材料等有一定了解，对信号控制、智能交通有较深入的研究，在读研期间，完成过智能交通整体架构方案，对整个框架有一定了解。工作后，跑了国内外大几十个城">
+<meta property="og:description" content="前段时间没事又忍不住买了个pacificrack的廉价VPS，2核+2G+60G 一年才13刀，实在没忍住，就下手了。之前的VPS，已经做了梯子，这个在做一个倒是无妨，最新的攻略参看【小白福利】2021最新V2Ray搭建图文教程，V2Ray一键搭建脚本！，真的是特别小白，开箱即用。 那么问题来了，可是这个还可以用来做什么呢，之前折腾过一点离线下载，就搭一个吧。主要的思路是，利用Aria2进行离线下">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2015-09-11T11:08:03.000Z">
-<meta property="article:modified_time" content="2021-05-12T07:43:30.884Z">
+<meta property="og:image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/ariang1.png?x-oss-process=style/sy-highq">
+<meta property="og:image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/remote.jpg?x-oss-process=style/sy-highq">
+<meta property="og:image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/Onedrive.png?x-oss-process=style/sy-highq">
+<meta property="og:image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/zfile.png?x-oss-process=style/sy-highq">
+<meta property="og:image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/nas1.png?x-oss-process=style/sy-highq">
+<meta property="og:image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/nas2.png?x-oss-process=style/sy-highq">
+<meta property="og:image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/nas3.png?x-oss-process=style/sy-highq">
+<meta property="article:published_time" content="2021-09-14T16:06:15.000Z">
+<meta property="article:modified_time" content="2021-09-14T16:07:47.777Z">
 <meta property="article:author" content="ShengFa Zhu">
+<meta property="article:tag" content="教程">
+<meta property="article:tag" content="技巧">
+<meta property="article:tag" content="折腾">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/ariang1.png?x-oss-process=style/sy-highq">
 
-<link rel="canonical" href="http://flypig.cc/about/">
+<link rel="canonical" href="http://flypig.cc/2021/09/15/arianas/">
 
 
 <script id="page-configurations">
@@ -40,13 +51,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>我是谁？ | Life of Flypig
-</title>
+  <title>Aria2+AriaNG+Rclone+OneDrive+Zfile+黑裙离线下载折腾记 | Life of Flypig</title>
   
 
 
@@ -172,103 +182,129 @@
       <div class="main-inner">
         <div class="content-wrap">
           
-  
-  
 
-          <div class="content page posts-expand">
+          <div class="content post posts-expand">
             
 
     
-    
-    
-    <div class="post-block" lang="zh-CN">
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://flypig.cc/2021/09/15/arianas/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://flypigblog.oss-cn-beijing.aliyuncs.com/favicon.ico">
+      <meta itemprop="name" content="ShengFa Zhu">
+      <meta itemprop="description" content="keep working and learning!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Life of Flypig">
+    </span>
       <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Aria2+AriaNG+Rclone+OneDrive+Zfile+黑裙离线下载折腾记
+        </h1>
 
-<h1 class="post-title" itemprop="name headline">我是谁？
-</h1>
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
 
-<div class="post-meta">
+              <time title="创建时间：2021-09-15 00:06:15 / 修改时间：00:07:47" itemprop="dateCreated datePublished" datetime="2021-09-15T00:06:15+08:00">2021-09-15</time>
+            </span>
+
+          
+            <span id="/2021/09/15/arianas/" class="post-meta-item leancloud_visitors" data-flag-title="Aria2+AriaNG+Rclone+OneDrive+Zfile+黑裙离线下载折腾记" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/09/15/arianas/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/09/15/arianas/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
   
 
-</div>
+        </div>
+      </header>
 
-</header>
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-      
-      
-      <div class="post-body">
-          <p>毕业于同济大学交通学院的小硕一枚，主要研究方向为智能交通，信号控制。在李克平教授课题组学习，师从唐克双教授。<br>具体研究问题包括绿闪时期驾驶员行为分析<a target="_blank" rel="noopener" href="http://www.zhihu.com/question/21750925/answer/55634756">1</a>,<a target="_blank" rel="noopener" href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7222453&newsearch=true&queryText=Modeling%20Drivers%E2%80%99%20Dynamic%20Decision-Making%20Behavior%20during%20the%20Phase%20Transition%20Period:An%20Analytical%20Approach%20Based%20on%20Hidden%20Markov%20Model%20Theory">2</a>以及城市主干路控制与诱导耦合算法。<br>主攻交通工程相关专业，对交通规划、交通组织优化、道路路基路面、道路建筑材料等有一定了解，对信号控制、智能交通有较深入的研究，在读研期间，完成过智能交通整体架构方案，对整个框架有一定了解。<br>工作后，跑了国内外大几十个城市，做各类售前售后方案，对信号控制系统、智能交通系统从前端施工到后端开发等实际问题有更加深入的体会与认识。</p>
-<h1 id="学习经历"><a href="#学习经历" class="headerlink" title="学习经历"></a>学习经历</h1><blockquote>
-<ul>
-<li><em>2009.9-2013.6</em><br>　就读于 <strong>华中科技大学</strong>  主修<strong>交通工程</strong></li>
-<li><em>2013.9-2016.6</em><br>　就读于 <strong>同济大学</strong> 主修<strong>信号控制</strong></li>
-</ul>
-</blockquote>
-<h1 id="工作情况"><a href="#工作情况" class="headerlink" title="工作情况"></a>工作情况</h1><blockquote>
-<ul>
-<li><em>2016.7-今</em><br>中国船舶第716所连云港杰瑞电子有限公司  <strong>信号控制平台算法开发、智能交通整体方案、信号控制优化</strong></li>
-<li><em>2018.1-今</em><br>中国船舶第716所连云港杰瑞电子有限公司  <strong>武汉分公司</strong></li>
-</ul>
-</blockquote>
-<h1 id="项目经历"><a href="#项目经历" class="headerlink" title="项目经历"></a>项目经历</h1><h2 id="学生阶段："><a href="#学生阶段：" class="headerlink" title="学生阶段："></a>学生阶段：</h2><blockquote>
-<ol>
-<li>杨浦区智能交通管理中心  <strong>分项负责人</strong><ul>
-<li>负责完成整体框架图及拓扑结构图，对交通信息中心网络拓扑结构有一定了解</li>
-<li>负责部分业务应用系统的框架设计</li>
-</ul>
-</li>
-<li>天津城市道路平面交叉口治堵关键技术研究  <strong>分项负责人</strong></li>
-<li>国家科技支撑计划子课题 《基于数据驱动的城市交通智能联网联控关键技术与示范》（2014BAG03B00）<strong>分项负责人</strong></li>
-<li>苏州市轨道交通五号线车站客流仿真  <strong>负责人</strong></li>
-<li>上海市浦东新区邮件处理中心二期工程交通影响评价 <strong>负责人</strong></li>
-</ol>
-</blockquote>
-<h1 id="实习经历"><a href="#实习经历" class="headerlink" title="实习经历"></a>实习经历</h1><blockquote>
-<ul>
-<li><em>2010.9-2013.6</em>  华中科技大学互联网团队冰岩作坊</li>
-<li><em>2015.4-2015.5</em>  武汉市规划设计研究院 </li>
-</ul>
-</blockquote>
-<h1 id="软件技能"><a href="#软件技能" class="headerlink" title="软件技能"></a>软件技能</h1><blockquote>
-<ul>
-<li>基本办公：熟练使用<em>MS Office , AutoCAD</em> </li>
-<li>专业软件：<em>Vissim , Legion , Visum , SUMO仿真, TransCAD基本</em></li>
-<li>数据分析：<em>SPSS , SAS基本</em></li>
-<li>视图软件：<em>Fireworks , Photoshop , 会声会影, AE, Final cut pro</em></li>
-</ul>
-</blockquote>
-<h1 id="语言技能"><a href="#语言技能" class="headerlink" title="语言技能"></a>语言技能</h1><blockquote>
-<ul>
-<li>Python ： 主要学习利用<em>Python</em>做数据挖掘与可视化</li>
-<li>Matlab ：熟悉<em>Matlab</em>用法，利用其隐马尔科夫（<em>HMM</em>）工具包开发相关程序</li>
-<li>C# ：主要用于对<em>Vissim</em>的二次开发</li>
-<li>C++ : 主要用于算法开发及封装</li>
-</ul>
-</blockquote>
-<h1 id="发表论文"><a href="#发表论文" class="headerlink" title="发表论文"></a>发表论文</h1><blockquote>
-<ol>
-<li><a target="_blank" rel="noopener" href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7222453&newsearch=true&queryText=Modeling%20Drivers%E2%80%99%20Dynamic%20Decision-Making%20Behavior%20during%20the%20Phase%20Transition%20Period:An%20Analytical%20Approach%20Based%20on%20Hidden%20Markov%20Model%20Theory"><em>Modeling Drivers’ Dynamic Decision-Making Behavior During the Phase Transition Period: An Analytical Approach Based on Hidden Markov Model Theory</em> <strong>(IEEE-ITS)</strong></a></li>
-</ol>
-</blockquote>
-<h1 id="联系我"><a href="#联系我" class="headerlink" title="联系我"></a>联系我</h1><blockquote>
-<p><em>Email: <a href="mailto:&#x54;&#x4a;&#122;&#x73;&#102;&#x39;&#48;&#64;&#49;&#x36;&#51;&#x2e;&#x63;&#111;&#109;">&#x54;&#x4a;&#122;&#x73;&#102;&#x39;&#48;&#64;&#49;&#x36;&#51;&#x2e;&#x63;&#111;&#109;</a></em></p>
-</blockquote>
-<hr>
-<blockquote>
-<p>自愿堕落却又不甘堕落，还有多的路要走，还有很多的东西要学！</p>
-</blockquote>
+        <p>前段时间没事又忍不住买了个<a target="_blank" rel="noopener" href="https://pacificrack.com/">pacificrack</a>的廉价VPS，2核+2G+60G 一年才13刀，实在没忍住，就下手了。<br>之前的VPS，已经做了梯子，这个在做一个倒是无妨，最新的攻略参看<a target="_blank" rel="noopener" href="https://www.itblogcn.com/article/406.html">【小白福利】2021最新V2Ray搭建图文教程，V2Ray一键搭建脚本！</a>，真的是特别小白，开箱即用。</p>
+<p>那么问题来了，可是这个还可以用来做什么呢，之前折腾过一点离线下载，就搭一个吧。<br>主要的思路是，利用Aria2进行离线下载，AriaNg作为前端页面，利用Rclone同步到Onedrive，利用Zfile浏览相关页面，最后是家里有个黑裙，直接通过黑裙的同步，再把文件同步到家里的NAS。</p>
+<h2 id="Aria2"><a href="#Aria2" class="headerlink" title="Aria2"></a>Aria2</h2><p>免费轻量级命令行下载工具:Aria2<br>这里偷懒了，直接用的<a target="_blank" rel="noopener" href="https://github.com/P3TERX/aria2.sh">Aria2增强脚本</a><br>在VPS中安装（我的VPS是Ubuntu 20）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -N git.io&#x2F;aria2.sh &amp;&amp; chmod +x aria2.sh &amp;&amp; .&#x2F;aria2.sh</span><br></pre></td></tr></table></figure>
+<p>无脑按提示安装即可。</p>
+<p>在安装好Rclone后，需要配置自动上传到OneDrive的功能<br>找到 <code>/root/.aria2c/script.conf</code> 文件，有中文注释，需要修改网盘名称和下载路径。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 网盘名称(RCLONE 配置时填写的 name)</span><br><span class="line">drive-name&#x3D;OneDrive</span><br></pre></td></tr></table></figure>
 
-      </div>
-      
-      
-      
+<p>然后找到<code>/root/.aria2c/aria2.conf</code>文件，同样有中文注释，做一下修改</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># 下载完成后执行的命令</span><br><span class="line"># 将最后的clean.sh 换成 upload.sh</span><br><span class="line">on-download-complete&#x3D;&#x2F;root&#x2F;.aria2c&#x2F;upload.sh</span><br></pre></td></tr></table></figure>
+
+<p>然后重启Aria2</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 重启Aria2</span><br><span class="line">service aria2 restart</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="AriaNg"><a href="#AriaNg" class="headerlink" title="AriaNg"></a>AriaNg</h2><p>让 aria2 更容易使用的现代 Web 前端.<br>其官网：<a target="_blank" rel="noopener" href="http://ariang.mayswind.net/zh_Hans/">AriaNg</a><br>GitHub网址：<a target="_blank" rel="noopener" href="https://github.com/mayswind/AriaNg">AriaNg</a><br>我是直接将下载的最新的Releases版本，直接放到了VPS搭建好的NGINX中。<br>这里还需要配置一个RPC的秘钥，这个也比较简单，聪明的你一定可以找到的。<br>这里可以给一个小提示，上面的Aria2安装完了之后，生成了自带的AriaNg的连接，可以将这个网站中AriaNg中RPC的秘钥明文复制过来，大功告成。<br><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/ariang1.png?x-oss-process=style/sy-highq" alt="AriaNg"></p>
+<h2 id="Rclone"><a href="#Rclone" class="headerlink" title="Rclone"></a>Rclone</h2><p>官网也提供了一键脚本</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl https:&#x2F;&#x2F;rclone.org&#x2F;install.sh | sudo bash</span><br></pre></td></tr></table></figure>
+<p>Rclone的攻略也很多，并不过多的赘述，只是这里有一个问题，就是远程的VPS中是不带界面的，最好的办法就是按照Rclone的文档中介绍的，在选择Onedrive授权码的界面时，选择”N“，然后在本机安装Rclone，获取授权码，复制过去。<br><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/remote.jpg?x-oss-process=style/sy-highq" alt="选择no"><br>在回到第一步修改Aria2的相关配置。</p>
+<h2 id="OneDrive"><a href="#OneDrive" class="headerlink" title="OneDrive"></a>OneDrive</h2><p>OneDrive这个如果没有空间，可以去某宝看看，嘘。<br>同步的效果如下。<br><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/Onedrive.png?x-oss-process=style/sy-highq" alt="OneDrive"></p>
+<h2 id="Zfile"><a href="#Zfile" class="headerlink" title="Zfile"></a>Zfile</h2><p>参看之前的博客，有介绍，这里不多赘述<a href="http://flypig.cc/2020/11/07/shareopencloud/">zfile介绍</a><br>直接挂在本地盘和OneDrive，就可以实现多媒体功能。<br><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/zfile.png?x-oss-process=style/sy-highq" alt="Zfile"></p>
+<h2 id="黑裙同步"><a href="#黑裙同步" class="headerlink" title="黑裙同步"></a>黑裙同步</h2><p>最后利用黑裙的同步功能，增加OneDrive的同步设置，达到离线下载，同步NAS，观看电影的目的。<br><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/nas1.png?x-oss-process=style/sy-highq" alt="Nas同步设施"><br><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/nas2.png?x-oss-process=style/sy-highq" alt="增加OneDrive"><br><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/arianas/nas3.png?x-oss-process=style/sy-highq" alt="NAS家庭影院"></p>
+<p><strong>最后，祝所有的折腾，都真实有用！别熬夜，哈哈！</strong></p>
+
     </div>
-    
 
     
     
     
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%95%99%E7%A8%8B/" rel="tag"># 教程</a>
+              <a href="/tags/%E6%8A%80%E5%B7%A7/" rel="tag"># 技巧</a>
+              <a href="/tags/%E6%8A%98%E8%85%BE/" rel="tag"># 折腾</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/28/wrongroad/" rel="prev" title="生活中许多事就是北辙南辕">
+      <i class="fa fa-chevron-left"></i> 生活中许多事就是北辙南辕
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
 
 
           </div>
@@ -320,7 +356,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AD%A6%E4%B9%A0%E7%BB%8F%E5%8E%86"><span class="nav-number">1.</span> <span class="nav-text">学习经历</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E6%83%85%E5%86%B5"><span class="nav-number">2.</span> <span class="nav-text">工作情况</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E7%BB%8F%E5%8E%86"><span class="nav-number">3.</span> <span class="nav-text">项目经历</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%A6%E7%94%9F%E9%98%B6%E6%AE%B5%EF%BC%9A"><span class="nav-number">3.1.</span> <span class="nav-text">学生阶段：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86"><span class="nav-number">4.</span> <span class="nav-text">实习经历</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E6%8A%80%E8%83%BD"><span class="nav-number">5.</span> <span class="nav-text">软件技能</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%AD%E8%A8%80%E6%8A%80%E8%83%BD"><span class="nav-number">6.</span> <span class="nav-text">语言技能</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%91%E8%A1%A8%E8%AE%BA%E6%96%87"><span class="nav-number">7.</span> <span class="nav-text">发表论文</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%81%94%E7%B3%BB%E6%88%91"><span class="nav-number">8.</span> <span class="nav-text">联系我</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Aria2"><span class="nav-number">1.</span> <span class="nav-text">Aria2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AriaNg"><span class="nav-number">2.</span> <span class="nav-text">AriaNg</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Rclone"><span class="nav-number">3.</span> <span class="nav-text">Rclone</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OneDrive"><span class="nav-number">4.</span> <span class="nav-text">OneDrive</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Zfile"><span class="nav-number">5.</span> <span class="nav-text">Zfile</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%BB%91%E8%A3%99%E5%90%8C%E6%AD%A5"><span class="nav-number">6.</span> <span class="nav-text">黑裙同步</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
