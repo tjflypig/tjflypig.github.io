@@ -1113,10 +1113,11 @@
       </tags>
   </entry>
   <entry>
-    <title>Aria2+AriaNG+Rclone+OneDrive+Zfile+黑裙离线下载折腾记</title>
+    <title>AAROZ组合利器离线下载折腾记</title>
     <url>/2021/09/15/arianas/</url>
-    <content><![CDATA[<p>前段时间没事又忍不住买了个<a href="https://pacificrack.com/">pacificrack</a>的廉价VPS，2核+2G+60G 一年才13刀，实在没忍住，就下手了。<br>之前的VPS，已经做了梯子，这个在做一个倒是无妨，最新的攻略参看<a href="https://www.itblogcn.com/article/406.html">【小白福利】2021最新V2Ray搭建图文教程，V2Ray一键搭建脚本！</a>，真的是特别小白，开箱即用。</p>
+    <content><![CDATA[<p>哈哈不然标题太长了，AAROZ = <strong>Aria2+AriaNG+Rclone+OneDrive+Zfile+黑裙</strong><br>前段时间没事又忍不住买了个<a href="https://pacificrack.com/">pacificrack</a>的廉价VPS，2核+2G+60G 一年才13刀，实在没忍住，就下手了。<br>之前的VPS，已经做了梯子，这个在做一个倒是无妨，最新的攻略参看<a href="https://www.itblogcn.com/article/406.html">【小白福利】2021最新V2Ray搭建图文教程，V2Ray一键搭建脚本！</a>，真的是特别小白，开箱即用。</p>
 <p>那么问题来了，可是这个还可以用来做什么呢，之前折腾过一点离线下载，就搭一个吧。<br>主要的思路是，利用Aria2进行离线下载，AriaNg作为前端页面，利用Rclone同步到Onedrive，利用Zfile浏览相关页面，最后是家里有个黑裙，直接通过黑裙的同步，再把文件同步到家里的NAS。</p>
+<a id="more"></a>
 <h2 id="Aria2"><a href="#Aria2" class="headerlink" title="Aria2"></a>Aria2</h2><p>免费轻量级命令行下载工具:Aria2<br>这里偷懒了，直接用的<a href="https://github.com/P3TERX/aria2.sh">Aria2增强脚本</a><br>在VPS中安装（我的VPS是Ubuntu 20）：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">wget -N git.io&#x2F;aria2.sh &amp;&amp; chmod +x aria2.sh &amp;&amp; .&#x2F;aria2.sh</span><br></pre></td></tr></table></figure>
 <p>无脑按提示安装即可。</p>
