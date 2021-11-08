@@ -1184,4 +1184,27 @@
         <tag>假期,上海</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Mac ReportCrash 突然功耗增加问题</title>
+    <url>/2021/11/05/ReportCrash/</url>
+    <content><![CDATA[<p>电脑品牌：MacBook Air M1</p>
+<p>最近发现电脑的耗电量有点不正常，前一段时间，基本待机15h+没有太大问题，也基本没有发热的情况，然而突然发热严重，轻度办公条件下基本6个小时电量就要见底了，这让我一度以为是不是买了个假苹果。</p>
+<p><img src="https://flypigblog.oss-cn-beijing.aliyuncs.com/poweruse.png?x-oss-process=style/sy-highq" alt="用电量"></p>
+<p>可以看到10月30日，用电脑月9小时，耗费55%左右电量，然而10月31日之后，6小时耗费了近90%电量，而且电脑发热。</p>
+<p>下意识去看了下进程，发现有个叫ReportCrash的进程吃掉了大量的CPU资源，48小时的耗电量惊人。</p>
+<p>了解了一下，这个进程是为了处理其他报错进程的，一旦出现了进程crash，ReportCrash就会出现，然后如果进程会自动重启，就会进入一个死循环：运行、崩溃、再运行，ReportCrash就会一直出现。</p>
+<p>这样一个过程耗费了大量的cpu资源，自然，各类问题就产生了。</p>
+<p>查询苹果的官方文件，表示可以按照以下代码关闭ReportCrash：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">launchctl unload -w &#x2F;System&#x2F;Library&#x2F;LaunchAgents&#x2F;com.apple.ReportCrash.plist</span><br><span class="line">sudo launchctl unload -w &#x2F;System&#x2F;Library&#x2F;LaunchDaemons&#x2F;com.apple.ReportCrash.Root.plist</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>如果想重新开启：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">launchctl load -w &#x2F;System&#x2F;Library&#x2F;LaunchAgents&#x2F;com.apple.ReportCrash.plist</span><br><span class="line">sudo launchctl load -w &#x2F;System&#x2F;Library&#x2F;LaunchDaemons&#x2F;com.apple.ReportCrash.Root.plist</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>我自己的电脑问题在于audiocore这个进程，不知道大家有没有同样的经历，big sur版本之后，Chrome经常没事声音，查询网上的办法，就是中止audiocore这个进程，然后系统会自动重启这个声音进程，就恢复了，不知道前一段时间是出现了什么问题，导致这个玩意重启不动，就触发了上面的crash了。</p>
+<p>分享给大家，协助大家避坑。</p>
+]]></content>
+      <tags>
+        <tag>Mac</tag>
+      </tags>
+  </entry>
 </search>
