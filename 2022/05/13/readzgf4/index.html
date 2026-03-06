@@ -327,5 +327,29 @@
   <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
 </noscript>
 
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
+<script src="https://unpkg.com/@waline/client@v3/dist/waline.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const postBody = document.querySelector('.post-body');
+  if (postBody) {
+    const commentsDiv = document.createElement('div');
+    commentsDiv.id = 'waline-container';
+    commentsDiv.className = 'comments';
+    commentsDiv.style.marginTop = '40px';
+    postBody.appendChild(commentsDiv);
+    
+    Waline.init({
+      el: '#waline-container',
+      serverURL: 'http://101.132.44.252:8360',
+      placeholder: '说点什么...',
+      avatar: 'mp',
+      pageSize: 10,
+      lang: 'zh-CN'
+    });
+  }
+});
+</script>
+  
 </body>
 </html>
