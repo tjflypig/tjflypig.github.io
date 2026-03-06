@@ -67,7 +67,7 @@
 
 
 
-
+<link rel="dns-prefetch" href="http://101.132.44.252:8360">
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
   </noscript>
@@ -221,6 +221,20 @@
       <span class="post-meta-item-text">阅读次数：</span>
       <span id="busuanzi_value_page_pv"></span>
     </span>
+  
+  <span class="post-meta-item">
+    
+    <span class="post-meta-item-icon">
+      <i class="far fa-comment"></i>
+    </span>
+    <span class="post-meta-item-text">Waline：</span>
+  
+    <a title="waline" href="/2021/08/28/wrongroad/#waline" itemprop="discussionUrl">
+      <span class="post-comments-count waline-comment-count" data-path="/2021/08/28/wrongroad/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 </div>
 
         </div>
@@ -274,6 +288,7 @@
 
 
 
+    <div class="comments" id="waline"></div>
 </div>
   </main>
 
@@ -327,43 +342,17 @@
 <noscript>
   <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
 </noscript>
-
-<link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
-<script src="https://unpkg.com/@waline/client@v3/dist/waline.js"></script>
+<script class="next-config" data-name="waline" type="application/json">{"lang":"zh-cn","enable":true,"serverURL":"http://101.132.44.252:8360","cssUrl":"https://unpkg.com/@waline/client@v2/dist/waline.css","commentCount":true,"pageview":false,"placeholder":"说点什么...","avatar":"mm","meta":["nick","mail","link"],"pageSize":10,"visitor":true,"comment_count":true,"requiredFields":["nick"],"el":"#waline","comment":true,"libUrl":"//unpkg.com/@waline/client@v2/dist/waline.js","path":"/2021/08/28/wrongroad/"}</script>
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@v2/dist/waline.css">
 <script>
-(function() {
-  // 等待 DOM 加载完成后初始化
-  function initWaline() {
-    // 在文章页面底部添加评论容器
-    var commentsArea = document.querySelector('.post-footer');
-    if (commentsArea) {
-      var walineContainer = document.createElement('div');
-      walineContainer.id = 'waline-container';
-      walineContainer.className = 'comments';
-      walineContainer.style.marginTop = '30px';
-      
-      commentsArea.appendChild(walineContainer);
-      
-      Waline.init({
-        el: '#waline-container',
-        serverURL: 'http://101.132.44.252:8360',
-        placeholder: '说点什么...',
-        avatar: 'mp',
-        pageSize: 10,
-        lang: 'zh-CN',
-        visitor: true,
-        emoji: ['https://unpkg.com/@waline/emojis@1.1.0/weibo']
-      });
-    }
-  }
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWaline);
-  } else {
-    initWaline();
-  }
-})();
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.waline.el).then(() =>
+    NexT.utils.getScript(CONFIG.waline.libUrl, { condition: window.Waline })
+  ).then(() => 
+    Waline.init(Object.assign({}, CONFIG.waline,{ el: document.querySelector(CONFIG.waline.el) }))
+  );
+});
 </script>
-  
+
 </body>
 </html>
