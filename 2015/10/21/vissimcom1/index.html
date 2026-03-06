@@ -373,25 +373,38 @@
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
 <script src="https://unpkg.com/@waline/client@v3/dist/waline.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const postBody = document.querySelector('.post-body');
-  if (postBody) {
-    const commentsDiv = document.createElement('div');
-    commentsDiv.id = 'waline-container';
-    commentsDiv.className = 'comments';
-    commentsDiv.style.marginTop = '40px';
-    postBody.appendChild(commentsDiv);
-    
-    Waline.init({
-      el: '#waline-container',
-      serverURL: 'http://101.132.44.252:8360',
-      placeholder: '说点什么...',
-      avatar: 'mp',
-      pageSize: 10,
-      lang: 'zh-CN'
-    });
+(function() {
+  // 等待 DOM 加载完成后初始化
+  function initWaline() {
+    // 在文章页面底部添加评论容器
+    var commentsArea = document.querySelector('.post-footer');
+    if (commentsArea) {
+      var walineContainer = document.createElement('div');
+      walineContainer.id = 'waline-container';
+      walineContainer.className = 'comments';
+      walineContainer.style.marginTop = '30px';
+      
+      commentsArea.appendChild(walineContainer);
+      
+      Waline.init({
+        el: '#waline-container',
+        serverURL: 'http://101.132.44.252:8360',
+        placeholder: '说点什么...',
+        avatar: 'mp',
+        pageSize: 10,
+        lang: 'zh-CN',
+        visitor: true,
+        emoji: ['https://unpkg.com/@waline/emojis@1.1.0/weibo']
+      });
+    }
   }
-});
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWaline);
+  } else {
+    initWaline();
+  }
+})();
 </script>
   
 </body>
