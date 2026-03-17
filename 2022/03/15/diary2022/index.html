@@ -312,14 +312,57 @@
     <span class="author" itemprop="copyrightHolder">ShengFa Zhu</span>
   </div>
   <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
-  </div><div class="manual-visitor-count">
+  </div><span class="with-love footer-visitor-separator">
+  <i class="fa fa-heart"></i>
+</span>
+<div class="manual-visitor-count">
   <span class="post-meta-item" title="累计访客">
     <span class="post-meta-item-icon">
       <i class="fa fa-user"></i>
     </span>
-    <span class="site-uv">10,927</span>
+    <span class="site-uv" id="site-visitor-count">10,927</span>
   </span>
 </div>
+<script>
+(() => {
+  const FALLBACK_VISITORS = 10927;
+  const STORAGE_KEY = 'lovelyzzz_visitor_counter_id';
+  const COUNTER_URL = 'https://lgzzz.top/counter/hit';
+  const target = document.getElementById('site-visitor-count');
+
+  if (!target) return;
+
+  const formatNumber = value => new Intl.NumberFormat('en-US').format(value);
+  target.textContent = formatNumber(FALLBACK_VISITORS);
+
+  let clientId = localStorage.getItem(STORAGE_KEY);
+
+  if (!clientId) {
+    clientId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(STORAGE_KEY, clientId);
+  }
+
+  fetch(COUNTER_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      site: location.hostname,
+      path: location.pathname,
+      clientId,
+      referrer: document.referrer
+    })
+  })
+    .then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`)))
+    .then(data => {
+      if (data && typeof data.totalVisitors === 'number') {
+        target.textContent = formatNumber(data.totalVisitors);
+      }
+    })
+    .catch(() => {});
+})();
+</script>
 
 
     </div>
