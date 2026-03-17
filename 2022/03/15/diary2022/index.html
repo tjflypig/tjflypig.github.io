@@ -316,16 +316,16 @@
   <i class="fa fa-heart"></i>
 </span>
 <div class="manual-visitor-count">
-  <span class="post-meta-item" title="累计访客">
+  <span class="post-meta-item" title="总访问量">
     <span class="post-meta-item-icon">
-      <i class="fa fa-user"></i>
+      <i class="fa fa-eye"></i>
     </span>
-    <span class="site-uv" id="site-visitor-count">10,927</span>
+    <span class="site-uv" id="site-visitor-count">19,728</span>
   </span>
 </div>
 <script>
 (() => {
-  const FALLBACK_VISITORS = 10927;
+  const FALLBACK_VIEWS = 19728;
   const STORAGE_KEY = 'lovelyzzz_visitor_counter_id';
   const COUNTER_URL = 'https://lgzzz.top/counter/hit';
   const target = document.getElementById('site-visitor-count');
@@ -333,7 +333,7 @@
   if (!target) return;
 
   const formatNumber = value => new Intl.NumberFormat('en-US').format(value);
-  target.textContent = formatNumber(FALLBACK_VISITORS);
+  target.textContent = formatNumber(FALLBACK_VIEWS);
 
   let clientId = localStorage.getItem(STORAGE_KEY);
 
@@ -356,8 +356,8 @@
   })
     .then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`)))
     .then(data => {
-      if (data && typeof data.totalVisitors === 'number') {
-        target.textContent = formatNumber(data.totalVisitors);
+      if (data && typeof data.totalViews === 'number') {
+        target.textContent = formatNumber(data.totalViews);
       }
     })
     .catch(() => {});
