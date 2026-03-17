@@ -1347,7 +1347,7 @@ pre code {
   vertical-align: middle;
 }
 .links-of-author a::before {
-  background: #0dbff4;
+  background: #4bf9ff;
   display: inline-block;
   margin-right: 3px;
   transform: translateY(-2px);
@@ -2785,31 +2785,25 @@ header.header {
   gap: 6px 8px;
   justify-content: center;
 }
-.footer-inner .copyright,
-.footer-inner .footer-visitor-group {
+.footer-inner .copyright {
   align-items: center;
   display: inline-flex;
+  justify-content: center;
   margin: 0;
-}
-.footer-inner .copyright {
+  min-width: 100%;
   order: 1;
 }
 .footer-inner .copyright .with-love {
   margin: 0 8px;
 }
-.footer-inner .footer-visitor-group {
-  gap: 8px;
-  order: 2;
-}
-.footer-inner .footer-visitor-separator {
-  align-items: center;
-  display: inline-flex;
-  margin: 0;
-}
-.footer-inner .manual-visitor-count .post-meta-item {
+.footer-inner .manual-visitor-count {
   align-items: center;
   display: inline-flex;
   gap: 4px;
+  justify-content: center;
+  margin: 0;
+  min-width: 100%;
+  order: 2;
 }
 .footer-inner .powered-by {
   display: block;
